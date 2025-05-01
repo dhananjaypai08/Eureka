@@ -1,0 +1,13 @@
+**/node_modules/
+**/package-lock.json
+**/out
+**/dist
+**/out.r1cs
+**/out.wtns
+# **/proof.json
+**/verification.key
+**/proving.key
+**/witness
+**/.DS_Store
+.DS_Store
+**/target/
