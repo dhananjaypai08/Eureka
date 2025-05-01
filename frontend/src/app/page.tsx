@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {LocationRequest} from "./components/LocationRequest";
+import { LocationRequest } from "./components/LocationRequest";
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);

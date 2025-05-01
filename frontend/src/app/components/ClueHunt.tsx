@@ -34,20 +34,25 @@ const calculateDistance = (
   return distance;
 };
 
-export const ClueHunt = ({ userLocation }: { userLocation: { latitude: number; longitude: number } }) => {
+export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latitude: number; longitude: number } }) => {
   const [places, setPlaces] = useState<Place[]>([]);
   const [currentPlaceIndex, setCurrentPlaceIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [distances, setDistances] = useState<{[key: number]: number}>({});
   const [verifying, setVerifying] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string>("");
+  const [verificationResult, setVerificationResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  // Load places and calculate distances
+  // Load places using initial location
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
         // In a real app, you would fetch this from an API
-        // Here we're using the data directly from places.json
+        // For now, we'll use the data directly from the provided places
         const placesData = [
           {
             "id": 1,
@@ -99,12 +104,12 @@ export const ClueHunt = ({ userLocation }: { userLocation: { latitude: number; l
           },
         ];
 
-        // Calculate distances to each place
+        // Calculate initial distances to each place
         const distanceMap: {[key: number]: number} = {};
         placesData.forEach(place => {
           const distance = calculateDistance(
-            userLocation.latitude,
-            userLocation.longitude,
+            initialUserLocation.latitude,
+            initialUserLocation.longitude,
             place.latitude,
             place.longitude
           );
@@ -127,32 +132,101 @@ export const ClueHunt = ({ userLocation }: { userLocation: { latitude: number; l
     };
 
     fetchPlaces();
-  }, [userLocation]);
+  }, [initialUserLocation]);
+
+  // Function to get current user location
+  const getCurrentUserLocation = (): Promise<{latitude: number, longitude: number}> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by your browser"));
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          let errorMessage = "Unknown error occurred while getting your location";
+          switch(error.code) {
+            case 1:
+              errorMessage = "Location access denied. Please enable location services";
+              break;
+            case 2:
+              errorMessage = "Location unavailable. Please try again";
+              break;
+            case 3:
+              errorMessage = "Location request timed out. Please try again";
+              break;
+          }
+          reject(new Error(errorMessage));
+        },
+        { enableHighAccuracy: true }
+      );
+    });
+  };
 
   const currentPlace = places[currentPlaceIndex];
   
-  const handleVerifyLocation = () => {
+  const handleVerifyLocation = async () => {
     setVerifying(true);
+    setLocationError("");
+    setVerificationResult(null);
     
-    // Simulate verification process
-    setTimeout(() => {
-      const distance = distances[currentPlace.id];
+    try {
+      // Get the CURRENT user location when they click verify
+      const currentUserLocation = await getCurrentUserLocation();
       
-      // For demo purposes, we're checking if user is within the threshold distance
-      if (distance <= currentPlace.thresholdDistance) {
-        // If we're not at the last place, move to the next one
-        if (currentPlaceIndex < places.length - 1) {
-          setCurrentPlaceIndex(currentPlaceIndex + 1);
-        } else {
-          // Last place verified - would show reward screen here
-          console.log("All locations verified!");
-        }
+      // Calculate the distance between the current user location and the target place
+      const currentDistance = calculateDistance(
+        currentUserLocation.latitude,
+        currentUserLocation.longitude,
+        currentPlace.latitude,
+        currentPlace.longitude
+      );
+      
+      // Update the displayed distance for the current place
+      setDistances(prev => ({
+        ...prev,
+        [currentPlace.id]: currentDistance
+      }));
+      
+      // Check if user is within the threshold distance
+      if (currentDistance <= currentPlace.thresholdDistance) {
+        setVerificationResult({
+          success: true,
+          message: `Location verified! You are ${Math.round(currentDistance)}m from the target.`
+        });
+        
+        // Wait a moment to show success before moving to next place
+        setTimeout(() => {
+          // If we're not at the last place, move to the next one
+          if (currentPlaceIndex < places.length - 1) {
+            setCurrentPlaceIndex(currentPlaceIndex + 1);
+            setVerificationResult(null);
+          } else {
+            // Last place verified - would show reward screen here
+            setVerificationResult({
+              success: true,
+              message: "Congratulations! You've completed all locations!"
+            });
+          }
+        }, 2000);
       } else {
-        console.log(`Too far away: ${distance.toFixed(2)}m. Need to be within ${currentPlace.thresholdDistance}m`);
+        setVerificationResult({
+          success: false,
+          message: `Too far away: ${Math.round(currentDistance)}m. Need to be within ${currentPlace.thresholdDistance}m.`
+        });
       }
-      
+    } catch (error) {
+      console.error("Error getting current location:", error);
+      setLocationError((error as Error).message);
+    } finally {
       setVerifying(false);
-    }, 2000);
+    }
   };
 
   if (loading) {
@@ -229,6 +303,55 @@ export const ClueHunt = ({ userLocation }: { userLocation: { latitude: number; l
             </p>
           </div>
         </div>
+
+        {/* Verification Result */}
+        {verificationResult && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            verificationResult.success ? "bg-green-900/30 border border-green-700" : "bg-red-900/30 border border-red-700"
+          }`}>
+            <div className="flex items-start">
+              <div className={`mt-0.5 mr-3 ${
+                verificationResult.success ? "text-green-400" : "text-red-400"
+              }`}>
+                {verificationResult.success ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                )}
+              </div>
+              <p className={`text-sm ${
+                verificationResult.success ? "text-green-300" : "text-red-300"
+              }`}>
+                {verificationResult.message}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Location Error */}
+        {locationError && (
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg">
+            <div className="flex items-start">
+              <div className="mt-0.5 mr-3 text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <p className="text-sm text-red-300">
+                {locationError}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Distance Indicator (for demo purposes - in a real ZK app you wouldn't show this) */}
         <div className="mb-8">
