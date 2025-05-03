@@ -1,112 +1,83 @@
 import React, { useState, useEffect } from "react";
+import { calculateDistance, getCurrentLocation, shuffleArray } from "../utils/geoUtils";
+import { connectWallet, sendReward } from "../utils/web3Utils";
+import { ExternalLink } from "lucide-react";
+import { Place, UserLocation, VerificationResult, RewardResult } from "../types";
 
-// Define the place type based on your places.json structure
-interface Place {
-  id: number;
-  name: string;
-  clue: string;
-  latitude: number;
-  longitude: number;
-  thresholdDistance: number;
-}
+// Get the number of clues per game from environment variables
+const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "4");
+const REWARD_AMOUNT = process.env.NEXT_PUBLIC_REWARD_AMOUNT || "0.01";
 
-// Calculate distance between two coordinates in meters using Haversine formula
-const calculateDistance = (
-  lat1: number, 
-  lon1: number, 
-  lat2: number, 
-  lon2: number
-): number => {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const a = 
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * 
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  
-  return distance;
-};
-
-export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latitude: number; longitude: number } }) => {
+export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLocation }) => {
+  // Game state
   const [places, setPlaces] = useState<Place[]>([]);
   const [currentPlaceIndex, setCurrentPlaceIndex] = useState<number>(0);
+  const [completedPlaces, setCompletedPlaces] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [gameCompleted, setGameCompleted] = useState<boolean>(false);
+  
+  const explorerBaseUrl = "https://sepolia.basescan.org/tx/";
+
+  // Location state
   const [distances, setDistances] = useState<{[key: number]: number}>({});
   const [verifying, setVerifying] = useState<boolean>(false);
   const [locationError, setLocationError] = useState<string>("");
-  const [verificationResult, setVerificationResult] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  
+  // Wallet state
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [connectingWallet, setConnectingWallet] = useState<boolean>(false);
+  const [walletError, setWalletError] = useState<string>("");
+  const [sendingReward, setSendingReward] = useState<boolean>(false);
+  const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
 
-  // Load places using initial location
+  // Load places from places.json and select random ones for this game
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        // In a real app, you would fetch this from an API
-        // For now, we'll use the data directly from the provided places
-        const placesData = [
-          {
-            "id": 1,
-            "name": "Eesha Krupa Building",
-            "clue": "Total : 2 Words.  The building is named after a famous Indian actress who played in Jannat2 + the second word for the building is a common hindi term which signifies blessing/favor in India.",
-            "latitude": 19.242284696517313,
-            "longitude": 73.13484960148622,
-            "thresholdDistance": 50
-          },
-          {
-            "id": 2,
-            "name": "Example Location 2",
-            "clue": "This place has the best view of the sunrise in the entire city(Chicken Ghar).",
-            "latitude": 19.248736,
-            "longitude": 73.140214,
-            "thresholdDistance": 50
-          },
-          {
-            "id": 3,
-            "name": "Sweeets Place madhurima",
-            "clue": "This place is famous for its sweets and is located near rambaug 4.",
-            "latitude": 19.242199638157526,
-            "longitude": 73.13656040841443,
-            "thresholdDistance": 50
-          },
-          {
-            "id": 4,
-            "name": "Maxi Ground",
-            "clue": "This place is famous for its cricket ground and is located near rambaug",
-            "latitude": 19.24206398976848,
-            "longitude": 73.13971732162364,
-            "thresholdDistance": 50
-          },
-          {
-            "id": 5,
-            "name": "Kala Talav Entry gate",
-            "clue": "This place is famous for its lake and is located near rambaug, entry gate",
-            "latitude": 19.244546664001724,
-            "longitude": 73.13150821451312,
-            "thresholdDistance": 50
-          },
-          {
-            "id": 6,
-            "name": "Mangya Shop",
-            "clue": "This place is behind kala talav and is famous for its ciggarettes and is located near rambaug",
-            "latitude": 19.24689932040889,
-            "longitude": 73.13326772461596,
-            "thresholdDistance": 50
-          },
-        ];
-
+        setLoading(true);
+        // Fetch places from the JSON file with the correct path
+        const response = await fetch('/data/places.json');
+        const allPlaces: Place[] = await response.json();
+        
+        // Filter places by user's city
+        const cityPlaces = allPlaces.filter(place => 
+          place.city.toLowerCase() === initialUserLocation.city.toLowerCase()
+        );
+        
+        // If no places found in user's city, use nearby places as fallback
+        let selectedPlaces: Place[] = [];
+        
+        if (cityPlaces.length >= CLUES_PER_GAME) {
+          // If we have enough places in the city, randomly select the required number
+          selectedPlaces = shuffleArray(cityPlaces).slice(0, CLUES_PER_GAME);
+        } else if (cityPlaces.length > 0) {
+          // If we have some places in the city but not enough, use all of them
+          selectedPlaces = cityPlaces;
+        } else {
+          // If no places in the city, calculate distances and use the closest ones
+          const distanceMap: {[key: number]: number} = {};
+          
+          allPlaces.forEach(place => {
+            const distance = calculateDistance(
+              initialUserLocation.latitude,
+              initialUserLocation.longitude,
+              place.latitude,
+              place.longitude
+            );
+            distanceMap[place.id] = distance;
+          });
+          
+          // Sort places by distance and take the closest ones
+          selectedPlaces = [...allPlaces]
+            .sort((a, b) => distanceMap[a.id] - distanceMap[b.id])
+            .slice(0, CLUES_PER_GAME);
+        }
+        
         // Calculate initial distances to each place
         const distanceMap: {[key: number]: number} = {};
-        placesData.forEach(place => {
+        selectedPlaces.forEach(place => {
           const distance = calculateDistance(
             initialUserLocation.latitude,
             initialUserLocation.longitude,
@@ -115,13 +86,8 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
           );
           distanceMap[place.id] = distance;
         });
-
-        // Sort places by distance
-        const sortedPlaces = [...placesData].sort((a, b) => 
-          distanceMap[a.id] - distanceMap[b.id]
-        );
-
-        setPlaces(sortedPlaces);
+    
+        setPlaces(selectedPlaces);
         setDistances(distanceMap);
         setLoading(false);
       } catch (error) {
@@ -134,51 +100,16 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
     fetchPlaces();
   }, [initialUserLocation]);
 
-  // Function to get current user location
-  const getCurrentUserLocation = (): Promise<{latitude: number, longitude: number}> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Geolocation is not supported by your browser"));
-        return;
-      }
-      
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-        },
-        (error) => {
-          let errorMessage = "Unknown error occurred while getting your location";
-          switch(error.code) {
-            case 1:
-              errorMessage = "Location access denied. Please enable location services";
-              break;
-            case 2:
-              errorMessage = "Location unavailable. Please try again";
-              break;
-            case 3:
-              errorMessage = "Location request timed out. Please try again";
-              break;
-          }
-          reject(new Error(errorMessage));
-        },
-        { enableHighAccuracy: true }
-      );
-    });
-  };
-
   const currentPlace = places[currentPlaceIndex];
   
+  // Verify user's current location against the target place
   const handleVerifyLocation = async () => {
     setVerifying(true);
     setLocationError("");
     setVerificationResult(null);
-    
     try {
-      // Get the CURRENT user location when they click verify
-      const currentUserLocation = await getCurrentUserLocation();
+      // Get the current user location when they click verify
+      const currentUserLocation = await getCurrentLocation();
       
       // Calculate the distance between the current user location and the target place
       const currentDistance = calculateDistance(
@@ -201,6 +132,9 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
           message: `Location verified! You are ${Math.round(currentDistance)}m from the target.`
         });
         
+        // Mark the current place as completed
+        setCompletedPlaces(prev => [...prev, currentPlace.id]);
+        
         // Wait a moment to show success before moving to next place
         setTimeout(() => {
           // If we're not at the last place, move to the next one
@@ -208,11 +142,8 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
             setCurrentPlaceIndex(currentPlaceIndex + 1);
             setVerificationResult(null);
           } else {
-            // Last place verified - would show reward screen here
-            setVerificationResult({
-              success: true,
-              message: "Congratulations! You've completed all locations!"
-            });
+            // Last place verified - show reward screen
+            setGameCompleted(true);
           }
         }, 2000);
       } else {
@@ -229,6 +160,48 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
     }
   };
 
+  // Connect to user's wallet
+  const handleConnectWallet = async () => {
+    setConnectingWallet(true);
+    setWalletError("");
+    
+    try {
+      const address = await connectWallet();
+      setWalletAddress(address);
+    } catch (error) {
+      console.error("Error connecting wallet:", error);
+      setWalletError((error as Error).message);
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
+
+  // Send reward to user's wallet
+  const handleClaimReward = async () => {
+    if (!walletAddress) {
+      setWalletError("Please connect your wallet first");
+      return;
+    }
+    
+    setSendingReward(true);
+    setRewardResult(null);
+    
+    try {
+      const result = await sendReward(walletAddress, REWARD_AMOUNT);
+      setRewardResult(result);
+    } catch (error) {
+      console.error("Error sending reward:", error);
+      setRewardResult({
+        success: false,
+        txHash: "",
+        error: (error as Error).message
+      });
+    } finally {
+      setSendingReward(false);
+    }
+  };
+
+  // Loading state
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4">
@@ -238,6 +211,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="text-center p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl">
@@ -260,6 +234,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
     );
   }
 
+  // No places found state
   if (!currentPlace) {
     return (
       <div className="text-center p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl">
@@ -268,6 +243,157 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: { latit
     );
   }
 
+  // Game completed - show wallet connection and reward screen
+  if (gameCompleted) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <div className="p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl">
+          {/* Completion Header */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Congratulations!</h2>
+            <p className="text-gray-400 mb-4">
+              You've successfully completed all {places.length} locations! 
+            </p>
+            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 mb-6">
+              <p className="text-green-300 font-medium">
+                You've earned {REWARD_AMOUNT} ETH as a reward!
+              </p>
+            </div>
+          </div>
+
+          {/* Wallet Connection */}
+          {!walletAddress ? (
+            <div className="space-y-6">
+              <p className="text-gray-300 text-center mb-4">
+                Connect your wallet to claim your rewards
+              </p>
+              
+              {walletError && (
+                <div className="p-3 bg-red-900/30 border border-red-700 rounded-lg mb-4">
+                  <p className="text-sm text-red-300">{walletError}</p>
+                </div>
+              )}
+              
+              <button
+                onClick={handleConnectWallet}
+                disabled={connectingWallet}
+                className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/20 flex items-center justify-center disabled:opacity-70"
+              >
+                {connectingWallet ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Connecting Wallet...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Connect Wallet
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-gray-800/50 p-4 rounded-lg flex items-center justify-between mb-4">
+                <span className="text-gray-400">Wallet</span>
+                <span className="text-white font-mono text-sm">
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </span>
+              </div>
+              
+              {rewardResult && (
+                <div className={`p-4 rounded-lg ${
+                  rewardResult.success 
+                    ? "bg-green-900/30 border border-green-700" 
+                    : "bg-red-900/30 border border-red-700"
+                } mb-4`}>
+                  <p className={`text-sm ${
+                    rewardResult.success ? "text-green-300" : "text-red-300"
+                  }`}>
+                    {rewardResult.success 
+                      ? `Success! Transaction sent: ${rewardResult.txHash.slice(0, 10)}...` &&
+                      <a 
+                        href={`${explorerBaseUrl}${rewardResult.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 mt-2 transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>View on Block Explorer</span>
+                      </a>
+                      : `Error: ${rewardResult.error}`}
+                  </p>
+                </div>
+              )}
+              
+              <button
+                onClick={handleClaimReward}
+                disabled={sendingReward || rewardResult?.success}
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-all shadow-lg flex items-center justify-center ${
+                  rewardResult?.success
+                    ? "bg-green-600 text-white opacity-70 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-blue-500/20 disabled:opacity-70"
+                }`}
+              >
+                {sendingReward ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending Reward...
+                    </>
+                ) : rewardResult?.success ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Reward Claimed!
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="16"></line>
+                      <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Claim {REWARD_AMOUNT} ETH Reward
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => window.location.href = "/"}
+            className="text-gray-400 hover:text-white text-sm flex items-center justify-center mx-auto transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular clue hunt UI
   return (
     <div className="w-full max-w-md mx-auto">
       {/* Progress indicator */}

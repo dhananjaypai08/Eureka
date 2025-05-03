@@ -1,46 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { ClueHunt } from "./ClueHunt";
+import { getCurrentLocation, detectCity } from "../utils/geoUtils";
 
 export const LocationRequest = () => {
   const [status, setStatus] = useState("pending");
   const [error, setError] = useState("");
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ 
+    latitude: number; 
+    longitude: number;
+    city: string; 
+  } | null>(null);
 
-  const requestLocation = () => {
+  const requestLocation = async () => {
     setStatus("requesting");
     
-    if (!navigator.geolocation) {
+    try {
+      // Get user's current location
+      const location = await getCurrentLocation();
+      
+      // Detect city from coordinates
+      const city = await detectCity(location.latitude, location.longitude);
+      
+      console.log("User location:", { ...location, city });
+      
+      // Save location with city
+      setUserLocation({ 
+        ...location, 
+        city 
+      });
+      
+      setStatus("success");
+    } catch (error) {
+      console.error("Error getting location:", error);
       setStatus("error");
-      setError("Geolocation is not supported by your browser");
-      return;
+      setError((error as Error).message);
     }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log("Initial user location:", { latitude, longitude });
-        setUserLocation({ latitude, longitude });
-        setStatus("success");
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        setStatus("error");
-        switch(error.code) {
-          case 1:
-            setError("Location access denied. Please enable location services");
-            break;
-          case 2:
-            setError("Location unavailable. Please try again");
-            break;
-          case 3:
-            setError("Location request timed out. Please try again");
-            break;
-          default:
-            setError("An unknown error occurred");
-        }
-      },
-      { enableHighAccuracy: true }
-    );
   };
 
   return (

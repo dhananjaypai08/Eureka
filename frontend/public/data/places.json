@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "name": "Eesha Krupa Building",
+    "clue": "Total : 2 Words. The building is named after a famous Indian actress who played in Jannat2 + the second word for the building is a common hindi term which signifies blessing/favor in India.",
+    "latitude": 19.242284696517313,
+    "longitude": 73.13484960148622,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 2,
+    "name": "Chicken Ghar",
+    "clue": "This place has the best view of the sunrise in the entire city.",
+    "latitude": 19.248736,
+    "longitude": 73.140214,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 3,
+    "name": "Madhurima Sweets",
+    "clue": "This place is famous for its sweets and is located near Rambaug 4.",
+    "latitude": 19.242199638157526,
+    "longitude": 73.13656040841443,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 4,
+    "name": "Maxi Ground",
+    "clue": "This place is famous for its cricket ground and is located near Rambaug.",
+    "latitude": 19.24206398976848,
+    "longitude": 73.13971732162364,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 5,
+    "name": "Kala Talav Entry Gate",
+    "clue": "This place is famous for its lake and is located near Rambaug, entry gate.",
+    "latitude": 19.244546664001724,
+    "longitude": 73.13150821451312,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 6,
+    "name": "Mangya Shop",
+    "clue": "This place is behind Kala Talav and is famous for its cigarettes and is located near Rambaug.",
+    "latitude": 19.24689932040889,
+    "longitude": 73.13326772461596,
+    "city": "Kalyan",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 7,
+    "name": "Gateway of India",
+    "clue": "A famous monument where the last British troops departed from India.",
+    "latitude": 18.921984,
+    "longitude": 72.834654,
+    "city": "Mumbai",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 8,
+    "name": "Marine Drive",
+    "clue": "This curved coastal road resembles a string of pearls when viewed at night from above.",
+    "latitude": 18.9472,
+    "longitude": 72.8233,
+    "city": "Mumbai",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 9,
+    "name": "Juhu Beach",
+    "clue": "A popular beach known for its street food and celebrity homes nearby.",
+    "latitude": 19.0883,
+    "longitude": 72.8263,
+    "city": "Mumbai",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 10,
+    "name": "Siddhi Vinayak Temple",
+    "clue": "One of the most visited temples in Mumbai dedicated to Lord Ganesha.",
+    "latitude": 19.0167,
+    "longitude": 72.8303,
+    "city": "Mumbai",
+    "thresholdDistance": 20
+  }
+]
