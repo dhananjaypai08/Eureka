@@ -44,7 +44,7 @@ export default function Navbar() {
                 </div>
               </div>
               <span className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-                ZK Hunt
+                EUREKA!
               </span>
             </Link>
           </div>

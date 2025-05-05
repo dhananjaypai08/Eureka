@@ -6,7 +6,7 @@
     "latitude": 19.242284696517313,
     "longitude": 73.13484960148622,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 2,
@@ -15,7 +15,7 @@
     "latitude": 19.248736,
     "longitude": 73.140214,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 3,
@@ -24,7 +24,7 @@
     "latitude": 19.242199638157526,
     "longitude": 73.13656040841443,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@
     "latitude": 19.24206398976848,
     "longitude": 73.13971732162364,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 5,
@@ -42,7 +42,7 @@
     "latitude": 19.244546664001724,
     "longitude": 73.13150821451312,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 6,
@@ -51,7 +51,7 @@
     "latitude": 19.24689932040889,
     "longitude": 73.13326772461596,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 7,
@@ -60,7 +60,7 @@
     "latitude": 18.921984,
     "longitude": 72.834654,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 8,
@@ -69,7 +69,7 @@
     "latitude": 18.9472,
     "longitude": 72.8233,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 9,
@@ -78,7 +78,7 @@
     "latitude": 19.0883,
     "longitude": 72.8263,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 10,
@@ -87,16 +87,16 @@
     "latitude": 19.0167,
     "longitude": 72.8303,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 11,
-    "name": "Green View Guest House, Jogiwara Road, McLeod Ganj, Dharamshala - 176200, Himachal Pradesh, India",
-    "clue": "This is the Guest House with a color name and a view of the mountains in the Jogiwara Road.",
+    "name": "The Bouganvillea View Hotel",
+    "clue": "Bouganvillea view hotel is a popular place for tourists, situated on the Jogiwara Road.",
     "latitude": 32.236938,
     "longitude": 76.326815,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 12,
@@ -105,15 +105,33 @@
     "latitude": 32.236693617708596,
     "longitude": 76.32660127164279,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 13,
+    "name": "The Bouganvillea View Hotel Rooftop",
+    "clue": "The BouganVillea View Hotel Rooftop is a popular place for tourists, situated on the Jogiwara Road.",
+    "latitude": 32.236693617708596,
+    "longitude": 76.32660127164279,
+    "city": "McLeodGanj",
+    "thresholdDistance": 10
+  },
+  {
+    "id": 14,
+    "name": "Green View Guest House, Jogiwara Road, McLeod Ganj, Dharamshala - 176200, Himachal Pradesh, India",
+    "clue": "This is the Guest House with a color name and a view of the mountains in the Jogiwara Road.",
+    "latitude": 32.236938,
+    "longitude": 76.326815,
+    "city": "McLeodGanj",
+    "thresholdDistance": 10
+  },
+  {
+    "id": 15,
     "name": "Bogdo Cafe",
     "clue": "This cafe is famour for its delicious food and is located on the Jogiwara Road and is called Bogdo Cafe.",
     "latitude": 32.236550631771664,
     "longitude": 76.32611265158349,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   }
 ]
