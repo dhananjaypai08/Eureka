@@ -90,7 +90,7 @@ export default function Home() {
               
               <a 
                 href="/about" 
-                className="px-8 py-4 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium transition-all w-full sm:w-auto flex items-center justify-center"
+                className="px-8 py-4 rounded-lg border border-gray-400 hover:bg-gray-50 text-gray-700 font-medium transition-all w-full sm:w-auto flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>

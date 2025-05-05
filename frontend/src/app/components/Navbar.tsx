@@ -20,18 +20,14 @@ export default function Navbar() {
 
   // All items will now show as active when on home route
   const isActive = (path: string) => {
-    return pathname === "/"
+    return pathname === path
       ? "text-white border-b-2 border-white"
       : "text-gray-300 hover:text-white transition-colors";
   };
 
   return (
     <nav 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled 
-          ? "bg-black/80 backdrop-blur-md border-b border-gray-800" 
-          : "bg-black/40 backdrop-blur-sm"
-      }`}
+      className="fixed top-0 w-full z-50 transition-all duration-300 bg-black/80 backdrop-blur-md border-b border-gray-800"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -60,7 +56,7 @@ export default function Navbar() {
             </Link>
             
             <Link
-              href="/"
+              href="/about"
               className={`px-1 py-2 text-sm font-medium ${isActive('/about')} relative group`}
             >
               About
@@ -113,7 +109,7 @@ export default function Navbar() {
           </Link>
           
           <Link
-            href="/"
+            href="/about"
             className={`block px-3 py-2 rounded-md text-base font-medium ${
               pathname === "/about" 
                 ? "bg-gray-900 text-white" 
