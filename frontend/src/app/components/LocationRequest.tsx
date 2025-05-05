@@ -34,9 +34,7 @@ export const LocationRequest = () => {
       console.error("Error getting location:", error);
       setStatus("error");
       setError((error as Error).message);
-      
-      // Optional: add a fallback option for the user to manually select their city
-      // This could be a dropdown or input field that appears when location detection fails
+
     }
   };
 
