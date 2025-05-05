@@ -11,7 +11,7 @@
   {
     "id": 2,
     "name": "Chicken Ghar",
-    "clue": "This place has the best view of the sunrise in the entire city.",
+    "clue": "This place has the best view of the sunrise in the entire city of kalyan.",
     "latitude": 19.248736,
     "longitude": 73.140214,
     "city": "Kalyan",
@@ -87,6 +87,33 @@
     "latitude": 19.0167,
     "longitude": 72.8303,
     "city": "Mumbai",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 11,
+    "name": "Green View Guest House, Jogiwara Road, McLeod Ganj, Dharamshala - 176200, Himachal Pradesh, India",
+    "clue": "This is the Guest House with a color name and a view of the mountains in the Jogiwara Road.",
+    "latitude": 32.236938,
+    "longitude": 76.326815,
+    "city": "McLeodGanj",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 12,
+    "name": "Bougainvillia, McLeod Ganj, Dharamshala - 176200, Himachal Pradesh, India",
+    "clue": "This is just opposite to the Green View Guest House and is a popular place for tourists, situated on the Jogiwara Road.",
+    "latitude": 32.236693617708596,
+    "longitude": 76.32660127164279,
+    "city": "McLeodGanj",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 13,
+    "name": "Bogdo Cafe",
+    "clue": "This cafe is famour for its delicious food and is located on the Jogiwara Road and is called Bogdo Cafe.",
+    "latitude": 32.236550631771664,
+    "longitude": 76.32611265158349,
+    "city": "McLeodGanj",
     "thresholdDistance": 20
   }
 ]

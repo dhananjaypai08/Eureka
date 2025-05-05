@@ -36,13 +36,8 @@ const FALLBACK_LOCATIONS = {
   }
 };
 
-// Get the current user location as a Promise
-export const getCurrentLocation = (useFallback = false): Promise<{latitude: number, longitude: number}> => {
-  // If in development mode or fallback is explicitly requested, use the fallback
-  if (useFallback || process.env.NODE_ENV === 'development') {
-    console.log("Using fallback location (Kalyan) for development/testing");
-    return Promise.resolve(FALLBACK_LOCATIONS.Kalyan);
-  }
+
+export const getCurrentLocation = async (): Promise<{latitude: number, longitude: number}> => {
 
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -52,8 +47,8 @@ export const getCurrentLocation = (useFallback = false): Promise<{latitude: numb
     
     // Set a timeout in case the location request takes too long
     const timeoutId = setTimeout(() => {
-      console.warn("Location request timed out, using fallback location");
-      resolve(FALLBACK_LOCATIONS.Kalyan);
+      console.warn("Location request timed out");
+      reject(new Error("Location request timed out. Please try again."));
     }, 10000); // 10 seconds timeout
     
     const successCallback = (position: GeolocationPosition) => {
@@ -67,20 +62,17 @@ export const getCurrentLocation = (useFallback = false): Promise<{latitude: numb
     const errorCallback = (error: GeolocationPositionError) => {
       clearTimeout(timeoutId);
       console.error("Geolocation error:", error.code, error.message);
-      
-      // For any geolocation error, use the fallback location for better user experience
-      console.warn("Using fallback location due to geolocation error");
-      resolve(FALLBACK_LOCATIONS.Kalyan);
+      reject(new Error("Could not access your location. Please check your browser permissions."));
     };
     
-    // Try to get the actual position with less strict requirements
+    // Try to get the actual position
     navigator.geolocation.getCurrentPosition(
       successCallback,
       errorCallback,
       { 
-        enableHighAccuracy: false, // Set to false for faster, less accurate positions
-        timeout: 8000,            // Shorter timeout
-        maximumAge: 60000         // Accept positions up to 1 minute old
+        enableHighAccuracy: true, // Better accuracy
+        timeout: 8000,
+        maximumAge: 0  // Always get fresh position
       }
     );
   });
@@ -89,21 +81,12 @@ export const getCurrentLocation = (useFallback = false): Promise<{latitude: numb
 // OpenCage API key - Store this in .env file in production
 const OPENCAGE_API_KEY = process.env.NEXT_PUBLIC_OPENCAGE_API_KEY || 'your_opencage_api_key_here'; 
 
-// Detect city based on coordinates using OpenCage Geocoding API
 export const detectCity = async (
   latitude: number,
   longitude: number
 ): Promise<string> => {
-  // If these are our fallback coordinates, return the preset city
-  for (const location of Object.values(FALLBACK_LOCATIONS)) {
-    if (Math.abs(latitude - location.latitude) < 0.01 && 
-        Math.abs(longitude - location.longitude) < 0.01) {
-      return location.city;
-    }
-  }
-
   try {
-    // Use OpenCage Geocoding API instead of Nominatim
+    // Use OpenCage Geocoding API
     const response = await fetch(
       `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${OPENCAGE_API_KEY}&language=en&pretty=1`
     );
@@ -118,7 +101,6 @@ export const detectCity = async (
       const result = data.results[0];
       const components = result.components;
       
-      // OpenCage provides a structured components object with various admin levels
       // Extract city name - try different possible fields
       let city = components.city || 
                 components.town || 
@@ -127,9 +109,8 @@ export const detectCity = async (
                 components.state_district ||
                 '';
       
-      // Handle hyphenated city names like "Kalyan-Dombivli"
+      // Handle hyphenated city names
       if (city && city.includes('-')) {
-        // Extract the first part (Kalyan from Kalyan-Dombivli)
         city = city.split('-')[0].trim();
       }
       
@@ -141,14 +122,13 @@ export const detectCity = async (
         }
       }
       
-      return city || "Kalyan"; // Default to Kalyan if no city found
+      return city || "Unknown City";
     }
     
-    return "Kalyan"; // Default fallback
+    return "Unknown City";
   } catch (error) {
     console.error("Error detecting city:", error);
-    // Return default city when geocoding fails
-    return "Unknown";
+    return "Unknown City";
   }
 };
 
