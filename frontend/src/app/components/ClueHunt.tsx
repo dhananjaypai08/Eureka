@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { calculateDistance, getCurrentLocation, shuffleArray } from "../utils/geoUtils";
-import { connectWallet, sendReward } from "../utils/web3Utils";
-import { ExternalLink } from "lucide-react";
-import { Place, UserLocation, VerificationResult, RewardResult } from "../types";
+import React, { useState, useEffect, useRef } from "react";
+import { calculateDistance, getCurrentLocation, shuffleArray, detectCity } from "../utils/geoUtils";
+import { connectWallet, sendReward, uploadToIPFS, mintNFT } from "../utils/web3Utils";
+import { ExternalLink, Camera } from "lucide-react";
+import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
 
 // Get the number of clues per game from environment variables
 const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "4");
@@ -14,8 +14,14 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [currentPlaceIndex, setCurrentPlaceIndex] = useState<number>(0);
   const [completedPlaces, setCompletedPlaces] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [mintLoader, setMintLoader] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
+  const [imageUploaded, setImageUploaded] = useState<boolean>(false);
+  const [currentUserLocation, setCurrentUserLocation] = useState<UserLocationMinimal| null>(null);
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const explorerBaseUrl = "https://sepolia.basescan.org/tx/";
 
@@ -31,6 +37,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [walletError, setWalletError] = useState<string>("");
   const [sendingReward, setSendingReward] = useState<boolean>(false);
   const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
+  const [clueFound, setClueFound] = useState<boolean>(false);
 
   // Load places from places.json and select random ones for this game
   useEffect(() => {
@@ -110,7 +117,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     try {
       // Get the current user location when they click verify
       const currentUserLocation = await getCurrentLocation();
-      
+      setCurrentUserLocation(currentUserLocation);
       // Calculate the distance between the current user location and the target place
       const currentDistance = calculateDistance(
         currentUserLocation.latitude,
@@ -132,20 +139,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           message: `Location verified! You are ${Math.round(currentDistance)}m from the target.`
         });
         
-        // Mark the current place as completed
-        setCompletedPlaces(prev => [...prev, currentPlace.id]);
-        
-        // Wait a moment to show success before moving to next place
-        setTimeout(() => {
-          // If we're not at the last place, move to the next one
-          if (currentPlaceIndex < places.length - 1) {
-            setCurrentPlaceIndex(currentPlaceIndex + 1);
-            setVerificationResult(null);
-          } else {
-            // Last place verified - show reward screen
-            setGameCompleted(true);
-          }
-        }, 2000);
+        setClueFound(true);
       } else {
         setVerificationResult({
           success: false,
@@ -159,6 +153,68 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       setVerifying(false);
     }
   };
+
+  useEffect(() => {
+    if (!imageUploaded || !currentPlace) return;
+    setCompletedPlaces(prev => [...prev, currentPlace.id]);
+    // Wait a moment to show success before moving to next place
+    setClueFound(false);
+    setImageUploaded(false);
+    setTimeout(() => {
+      // If we're not at the last place, move to the next one
+      if (currentPlaceIndex < places.length - 1) {
+        setCurrentPlaceIndex(currentPlaceIndex + 1);
+        setVerificationResult(null);
+      } else {
+        // Last place verified - show reward screen
+        setGameCompleted(true);
+      }
+    }, 2000);
+    
+  }, [imageUploaded]);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setMintLoader(true);
+      setPreviewUrl(URL.createObjectURL(file));
+      try {
+        const ipfsUrl = await uploadToIPFS(file);
+        console.log("File uploaded to IPFS:", ipfsUrl);
+  
+        if (!currentUserLocation) {
+          setLocationError("Please verify your location first");
+          return;
+        }
+  
+        const city = await detectCity(
+          currentUserLocation.latitude,
+          currentUserLocation.longitude
+        );
+  
+        const mintResult = await mintNFT(
+          "0xc4D54642fCb41dCBe9c065c855cB3138eDf5db6C",
+          ipfsUrl,
+          currentUserLocation.latitude.toString(),
+          currentUserLocation.longitude.toString(),
+          city
+        );
+  
+        if (!mintResult.success) {
+          setLocationError("NFT minting failed");
+          return;
+        }
+  
+        console.log("NFT minted: ", mintResult);
+        setImageUploaded(true);
+      } catch (error) {
+        console.error("Error uploading file to IPFS:", error);
+        setLocationError("An unexpected error occurred");
+      } finally {
+        setMintLoader(false); // Always stop loader
+      }
+    }
+  };  
 
   // Connect to user's wallet
   const handleConnectWallet = async () => {
@@ -510,6 +566,66 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
             ></div>
           </div>
         </div>
+
+      {clueFound && <div className="flex flex-col items-center gap-3">
+          {/* Preview */}
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-64 h-64 object-cover rounded-xl border border-gray-300 shadow-md"
+            />
+          ) : (
+            <div className="w-64 h-64 flex items-center justify-center border border-dashed border-gray-300 rounded-xl text-gray-400 text-sm">
+              No image selected
+            </div>
+          )}
+
+          {/* Upload Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="relative flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 rounded-lg shadow-sm border border-gray-300 transition"
+          >
+          {mintLoader && (
+            <span className="absolute left-3">
+              <svg
+                className="animate-spin h-5 w-5 text-gray-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+            </span>
+          )}
+          <Camera className="w-5 h-5" />
+          <span className={mintLoader ? "ml-4" : ""}>Take Photo</span>
+        </button>
+
+
+          {/* Hidden input */}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleImageUpload}
+          />
+        </div>}
 
         {/* Action Buttons */}
         <div className="space-y-4">

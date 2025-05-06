@@ -28,3 +28,9 @@ export interface Place {
     txHash: string;
     error?: string;
   }
+
+  export interface UserLocationMinimal {
+    latitude: number;
+    longitude: number;
+  }
+    

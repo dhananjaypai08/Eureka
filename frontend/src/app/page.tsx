@@ -17,7 +17,7 @@ export default function Home() {
       setTimeout(() => {
         setShowContent(true);
       }, 100);
-    }, 2500); // 2.5 seconds loading time
+    }, 1000); // 1 seconds loading time
 
     return () => clearTimeout(timer);
   }, []);
