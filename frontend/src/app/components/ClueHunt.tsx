@@ -206,6 +206,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   
         console.log("NFT minted: ", mintResult);
         setImageUploaded(true);
+        setPreviewUrl(null);
       } catch (error) {
         console.error("Error uploading file to IPFS:", error);
         setLocationError("An unexpected error occurred");
