@@ -96,7 +96,7 @@
     "latitude": 32.236938,
     "longitude": 76.326815,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 12,
@@ -105,7 +105,7 @@
     "latitude": 32.236693617708596,
     "longitude": 76.32660127164279,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 10
   },
   {
     "id": 13,
