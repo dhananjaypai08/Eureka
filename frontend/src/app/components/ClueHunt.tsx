@@ -44,7 +44,6 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     const fetchPlaces = async () => {
       try {
         setLoading(true);
-        // Fetch places from the JSON file with the correct path
         const response = await fetch('/data/places.json');
         const allPlaces: Place[] = await response.json();
         

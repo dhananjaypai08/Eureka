@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import { create } from 'ipfs-http-client';
+// Remove the top-level import
+// import { create } from 'ipfs-http-client';
 import contractData from '../../../abi/LocationPOAP.json';
 
 // Check if the browser has a web3 provider (like MetaMask)
@@ -70,9 +71,13 @@ export const sendReward = async (
 
 export const uploadToIPFS = async (file: File): Promise<string> => {
   try {
+    // Dynamically import ipfs-http-client only when this function is called
+    const { create } = await import('ipfs-http-client');
+    
     const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
     const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
     const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
+    
     const ipfs = create({
       host: 'ipfs.infura.io',
       port: 5001,
@@ -81,13 +86,14 @@ export const uploadToIPFS = async (file: File): Promise<string> => {
         authorization
       }
     });
+    
     const added = await ipfs.add(file);
     return added.path;
   } catch (error) {
     console.error("Error uploading to IPFS:", error);
     throw new Error("Failed to upload file to IPFS.");
   }
-}
+};
 
 export const mintNFT = async (to: string, ipfs: string, latitude: string, longitude: string, title: string): Promise<{success: boolean, txHash: string, error?: string}> => {
   try {
