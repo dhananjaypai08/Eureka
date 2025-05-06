@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Location based Scavenger Hunt",
+  title: "Eureka",
   description: "Location based Scavenger Hunt",
 };
 
