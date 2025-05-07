@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { calculateDistance, getCurrentLocation, shuffleArray, detectCity } from "../utils/geoUtils";
 import { connectWallet, sendReward, uploadToIPFS, mintNFT } from "../utils/web3Utils";
-import { ExternalLink, Camera } from "lucide-react";
-import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal, MintMetadata } from "../types";
-import { Lateef } from "next/font/google";
+import { ExternalLink, Camera, MapPin, Sparkles } from "lucide-react";
+import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
 
 // Get the number of clues per game from environment variables
 const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "4");
@@ -20,11 +19,17 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [imageUploaded, setImageUploaded] = useState<boolean>(false);
   const [currentUserLocation, setCurrentUserLocation] = useState<UserLocationMinimal| null>(null);
-  const [ImageUserMintData, setImageUserMintData] = useState<MintMetadata[] | []>([]);
+  const [ImageUserMintData, setImageUserMintData] = useState<any[] | []>([]);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
+  // Animation states
+  const [typedClue, setTypedClue] = useState<string>("");
+  const [showVerificationAnimation, setShowVerificationAnimation] = useState<boolean>(false);
+  const [progressPulse, setProgressPulse] = useState<boolean>(false);
+  const [confetti, setConfetti] = useState<boolean>(false);
+
   const explorerBaseUrl = "https://sepolia.basescan.org/tx/";
 
   // Location state
@@ -110,15 +115,41 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
 
   const currentPlace = places[currentPlaceIndex];
   
+  // Typing animation for clue text
+  useEffect(() => {
+    if (!currentPlace) return;
+    
+    // Reset typed clue when place changes
+    setTypedClue("");
+    
+    let index = 0;
+    const text = currentPlace.clue;
+    
+    // Typing animation interval
+    const typingInterval = setInterval(() => {
+      if (index < text.length) {
+        setTypedClue((prev) => prev + text.charAt(index));
+        index++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 30); // Speed of typing
+    
+    return () => clearInterval(typingInterval);
+  }, [currentPlace]);
+  
   // Verify user's current location against the target place
   const handleVerifyLocation = async () => {
     setVerifying(true);
     setLocationError("");
     setVerificationResult(null);
+    setShowVerificationAnimation(true);
+    
     try {
       // Get the current user location when they click verify
       const currentUserLocation = await getCurrentLocation();
       setCurrentUserLocation(currentUserLocation);
+      
       // Calculate the distance between the current user location and the target place
       const currentDistance = calculateDistance(
         currentUserLocation.latitude,
@@ -133,12 +164,20 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         [currentPlace.id]: currentDistance
       }));
       
+      // Trigger pulse animation on progress bar
+      setProgressPulse(true);
+      setTimeout(() => setProgressPulse(false), 1000);
+      
       // Check if user is within the threshold distance
       if (currentDistance <= currentPlace.thresholdDistance) {
         setVerificationResult({
           success: true,
           message: `Location verified! You are ${Math.round(currentDistance)}m from the target.`
         });
+        
+        // Show confetti animation
+        setConfetti(true);
+        setTimeout(() => setConfetti(false), 3000);
         
         setClueFound(true);
       } else {
@@ -152,6 +191,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       setLocationError((error as Error).message);
     } finally {
       setVerifying(false);
+      setTimeout(() => setShowVerificationAnimation(false), 1000);
     }
   };
 
@@ -259,6 +299,12 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       }
       const result = await sendReward(walletAddress, REWARD_AMOUNT);
       setRewardResult(result);
+      
+      // Show confetti animation on successful reward claim
+      if (result.success) {
+        setConfetti(true);
+        setTimeout(() => setConfetti(false), 4000);
+      }
     } catch (error) {
       console.error("Error sending reward:", error);
       setRewardResult({
@@ -317,21 +363,41 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   if (gameCompleted) {
     return (
       <div className="w-full max-w-md mx-auto">
-        <div className="p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl">
+        <div className="p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl relative overflow-hidden">
+          {/* Confetti animation */}
+          {confetti && (
+            <div className="confetti-container">
+              {[...Array(50)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="confetti"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `-10%`,
+                    backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                    animationDuration: `${1 + Math.random() * 3}s`
+                  }}
+                ></div>
+              ))}
+            </div>
+          )}
+          
           {/* Completion Header */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mb-4 animate-bounce">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Congratulations!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">Congratulations!</h2>
             <p className="text-gray-400 mb-4">
               You've successfully completed all {places.length} locations! 
             </p>
-            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 mb-6">
-              <p className="text-green-300 font-medium">
+            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4 mb-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-transparent bg-[length:200%_100%] animate-shine"></div>
+              <p className="text-green-300 font-medium relative z-10">
                 You've earned {REWARD_AMOUNT} ETH as a reward!
               </p>
             </div>
@@ -353,30 +419,31 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
               <button
                 onClick={handleConnectWallet}
                 disabled={connectingWallet}
-                className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/20 flex items-center justify-center disabled:opacity-70"
+                className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/20 flex items-center justify-center disabled:opacity-70 relative overflow-hidden group"
               >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/40 to-purple-500/40 opacity-0 group-hover:opacity-100 transform translate-y-full group-hover:translate-y-0 transition-all duration-300"></div>
                 {connectingWallet ? (
                   <>
                     <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Connecting Wallet...
+                    <span className="relative">Connecting Wallet...</span>
                   </>
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="5" width="18" height="14" rx="2"></rect>
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
-                    Connect Wallet
+                    <span className="relative">Connect Wallet</span>
                   </>
                 )}
               </button>
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="bg-gray-800/50 p-4 rounded-lg flex items-center justify-between mb-4">
+              <div className="bg-gray-800/50 p-4 rounded-lg flex items-center justify-between mb-4 border border-gray-700/50">
                 <span className="text-gray-400">Wallet</span>
                 <span className="text-white font-mono text-sm">
                   {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
@@ -388,12 +455,17 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                   rewardResult.success 
                     ? "bg-green-900/30 border border-green-700" 
                     : "bg-red-900/30 border border-red-700"
-                } mb-4`}>
+                } mb-4 relative overflow-hidden`}>
+                  {rewardResult.success && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-transparent bg-[length:200%_100%] animate-shine"></div>
+                  )}
                   <p className={`text-sm ${
                     rewardResult.success ? "text-green-300" : "text-red-300"
-                  }`}>
+                  } relative z-10`}>
                     {rewardResult.success 
-                      ? `Success! Transaction sent: ${rewardResult.txHash.slice(0, 10)}...` &&
+                      ? `Success! Transaction sent: ${rewardResult.txHash.slice(0, 10)}...` 
+                      : `Error: ${rewardResult.error}`}
+                      {rewardResult.success && 
                       <a 
                         href={`${explorerBaseUrl}${rewardResult.txHash}`}
                         target="_blank"
@@ -403,7 +475,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>View on Block Explorer</span>
                       </a>
-                      : `Error: ${rewardResult.error}`}
+                    }
                   </p>
                 </div>
               )}
@@ -411,36 +483,39 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
               <button
                 onClick={handleClaimReward}
                 disabled={sendingReward || rewardResult?.success}
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all shadow-lg flex items-center justify-center ${
+                className={`w-full py-3 px-4 rounded-lg font-medium transition-all shadow-lg flex items-center justify-center relative overflow-hidden ${
                   rewardResult?.success
                     ? "bg-green-600 text-white opacity-70 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-blue-500/20 disabled:opacity-70"
+                    : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-blue-500/20 disabled:opacity-70 group"
                 }`}
               >
+                {!rewardResult?.success && (
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/40 to-purple-500/40 opacity-0 group-hover:opacity-100 transform translate-y-full group-hover:translate-y-0 transition-all duration-300"></div>
+                )}
                 {sendingReward ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5 mr-2 text-white relative" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Sending Reward...
-                    </>
+                    <span className="relative">Sending Reward...</span>
+                  </>
                 ) : rewardResult?.success ? (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                       <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
-                    Reward Claimed!
+                    <span className="relative">Reward Claimed!</span>
                   </>
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10"></circle>
                       <line x1="12" y1="8" x2="12" y2="16"></line>
                       <line x1="8" y1="12" x2="16" y2="12"></line>
                     </svg>
-                    Claim {REWARD_AMOUNT} ETH Reward
+                    <span className="relative">Claim {REWARD_AMOUNT} ETH Reward</span>
                   </>
                 )}
               </button>
@@ -466,23 +541,63 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   // Regular clue hunt UI
   return (
     <div className="w-full max-w-md mx-auto">
+      {/* Confetti animation */}
+      {confetti && (
+        <div className="confetti-container">
+          {[...Array(50)].map((_, i) => (
+            <div 
+              key={i} 
+              className="confetti"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `-10%`,
+                backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${1 + Math.random() * 3}s`
+              }}
+            ></div>
+          ))}
+        </div>
+      )}
+      
       {/* Progress indicator */}
-      <div className="mb-6 w-full bg-gray-800 rounded-full h-2.5">
+      <div className="mb-6 w-full bg-gray-800 rounded-full h-2.5 relative overflow-hidden">
         <div 
-          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-300" 
+          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-700" 
           style={{ width: `${((currentPlaceIndex) / places.length) * 100}%` }}
         ></div>
+        <div className="absolute top-0 left-0 w-full h-full flex">
+          {places.map((_, index) => (
+            <div 
+              key={index} 
+              className={`flex-1 flex items-center justify-center ${index <= currentPlaceIndex ? 'text-white' : 'text-gray-600'}`}
+            >
+              <div 
+                className={`w-1.5 h-1.5 rounded-full mt-1 transition-all ${
+                  index < currentPlaceIndex ? 'bg-purple-500' : 
+                  index === currentPlaceIndex ? 'bg-blue-500 animate-pulse' : 
+                  'bg-gray-600'
+                }`}
+              ></div>
+            </div>
+          ))}
+        </div>
       </div>
       
-      <div className="p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl">
-        {/* Clue Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
+      <div className="p-8 rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800 shadow-xl relative overflow-hidden">
+        {/* Background glowing effect */}
+        <div className="absolute -inset-1/4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-3xl transform -rotate-12 opacity-30 animate-pulse"></div>
+        
+        {/* Clue Header with animated icon */}
+        <div className="text-center mb-8 relative">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 relative">
+            <MapPin className={`h-8 w-8 text-white transition-all ${showVerificationAnimation ? 'scale-150 opacity-0' : 'scale-100 opacity-100'}`} />
+            {showVerificationAnimation && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-blue-400/70 animate-ping"></div>
+                <MapPin className="absolute h-8 w-8 text-white animate-pulse" />
+              </div>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Clue {currentPlaceIndex + 1} of {places.length}</h2>
           <p className="text-gray-400">
@@ -490,32 +605,34 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           </p>
         </div>
 
-        {/* Clue Content */}
-        <div className="mb-8">
-          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-blue-400 mb-3">Your Clue:</h3>
-            <p className="text-xl text-white font-medium leading-relaxed">
-              {currentPlace.clue}
+        {/* Clue Content with typing animation */}
+        <div className="mb-8 transform hover:scale-105 transition-all duration-300">
+          <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-lg"></div>
+            <h3 className="text-lg font-semibold text-blue-400 mb-3 relative">Your Clue:</h3>
+            <p className="text-xl text-white font-medium leading-relaxed relative min-h-16">
+              {typedClue}
+              <span className="typing-cursor">|</span>
             </p>
           </div>
         </div>
 
-        {/* Verification Result */}
+        {/* Verification Result with animation */}
         {verificationResult && (
           <div className={`mb-6 p-4 rounded-lg ${
             verificationResult.success ? "bg-green-900/30 border border-green-700" : "bg-red-900/30 border border-red-700"
-          }`}>
+          } transform transition-all duration-300 ${verificationResult.success ? 'scale-105' : ''}`}>
             <div className="flex items-start">
               <div className={`mt-0.5 mr-3 ${
                 verificationResult.success ? "text-green-400" : "text-red-400"
               }`}>
                 {verificationResult.success ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -533,7 +650,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         
         {/* Location Error */}
         {locationError && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg">
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg animate-pulse">
             <div className="flex items-start">
               <div className="mt-0.5 mr-3 text-red-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -549,25 +666,28 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           </div>
         )}
 
-        {/* Distance Indicator (for demo purposes - in a real ZK app you wouldn't show this) */}
-        <div className="mb-8">
+        {/* Distance Indicator with animation */}
+        <div className="mb-8 transform hover:translate-y-px transition-all">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-400">Approximate Distance:</span>
-            <span className="text-sm font-medium">
+            <span className={`text-sm font-medium ${progressPulse ? 'text-blue-400 scale-110' : 'text-white'} transition-all duration-300`}>
               {distances[currentPlace.id] < 1000 
                 ? `${Math.round(distances[currentPlace.id])}m` 
                 : `${(distances[currentPlace.id] / 1000).toFixed(2)}km`}
             </span>
           </div>
-          <div className="w-full h-2 bg-gray-800 rounded-full mt-2">
+          <div className="w-full h-2 bg-gray-800 rounded-full mt-2 relative overflow-hidden">
+            {/* Animated radar sweep effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent bg-[length:200%_100%] animate-sweep"></div>
+            
             <div 
-              className={`h-2 rounded-full ${
+              className={`h-2 rounded-full transition-all duration-700 ${
                 distances[currentPlace.id] <= currentPlace.thresholdDistance 
                   ? "bg-green-500" 
                   : distances[currentPlace.id] <= currentPlace.thresholdDistance * 2 
                     ? "bg-yellow-500" 
                     : "bg-red-500"
-              }`}
+              } ${progressPulse ? 'animate-pulse' : ''}`}
               style={{ 
                 width: `${Math.max(
                   5, 
@@ -578,20 +698,39 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 )}%` 
               }}
             ></div>
+            
+            {/* Distance markers */}
+            <div className="w-full flex justify-between absolute top-3 left-0 px-1">
+              <div className="text-xs text-green-500">{currentPlace.thresholdDistance}m</div>
+              <div className="text-xs text-yellow-500">{currentPlace.thresholdDistance * 2}m</div>
+              <div className="text-xs text-red-500">{currentPlace.thresholdDistance * 5}m</div>
+            </div>
           </div>
         </div>
 
-      {clueFound && <div className="flex flex-col items-center gap-3">
+      {clueFound && <div className="flex flex-col items-center gap-3 relative ">
+          {/* Visual flourish for treasure found */}
+          <div className="absolute -inset-4 bg-gradient-to-r from-green-500/20 via-blue-500/10 to-purple-500/20 rounded-xl blur-md animate-pulse"></div>
+          <div className="relative flex items-center justify-center mb-2 space-x-2">
+            <Sparkles className="text-yellow-400 animate-pulse h-6 w-6 relative" />
+            <div className="text-xl font-bold text-white">Treasure Found!</div>
+          </div>
+          
           {/* Preview */}
           {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-64 h-64 object-cover rounded-xl border border-gray-300 shadow-md"
-            />
+            <div className="relative">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-64 h-64 object-cover rounded-xl border border-blue-500/50 shadow-lg shadow-blue-500/20 transition-all"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-transparent rounded-xl"></div>
+            </div>
           ) : (
-            <div className="w-64 h-64 flex items-center justify-center border border-dashed border-gray-300 rounded-xl text-gray-400 text-sm">
-              No image selected
+            <div className="w-64 h-64 flex items-center justify-center border border-dashed border-blue-300/50 rounded-xl text-gray-400 text-sm bg-black/30 relative overflow-hidden group transition-all hover:border-blue-400/70">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Camera className="h-8 w-8 text-blue-400/70 mb-2 group-hover:scale-110 transition-transform" />
+              <div className="absolute bottom-4 text-center">Capture your discovery</div>
             </div>
           )}
 
@@ -599,12 +738,12 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="relative flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 rounded-lg shadow-sm border border-gray-300 transition"
+            className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-md hover:shadow-blue-500/20 border border-blue-500/50 transition-all hover:-translate-y-1"
           >
           {mintLoader && (
             <span className="absolute left-3">
               <svg
-                className="animate-spin h-5 w-5 text-gray-600"
+                className="animate-spin h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -642,35 +781,36 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         </div>}
 
         {/* Action Buttons */}
-        <div className="space-y-4">
+        <div className="space-y-4 mt-4">
           <button
             onClick={handleVerifyLocation}
             disabled={verifying}
-            className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/20 flex items-center justify-center disabled:opacity-70"
+            className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/20 flex items-center justify-center disabled:opacity-70 relative overflow-hidden group"
           >
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/40 to-purple-500/40 opacity-0 group-hover:opacity-100 transform translate-y-full group-hover:translate-y-0 transition-all duration-300"></div>
             {verifying ? (
               <>
                 <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Verifying Location...
+                <span className="relative">Verifying Location...</span>
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 relative" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                Verify My Location
+                <span className="relative">Verify My Location</span>
               </>
             )}
           </button>
           
           <button 
-            className="w-full py-3 px-4 rounded-lg border border-gray-700 hover:bg-gray-800 text-gray-300 font-medium transition-all flex items-center justify-center"
+            className="w-full py-3 px-4 rounded-lg border border-gray-700 hover:bg-gray-800 text-gray-300 font-medium transition-all flex items-center justify-center group"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M12 8v4M12 16h.01"></path>
             </svg>
@@ -690,6 +830,72 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           Quit Hunt
         </button>
       </div>
+      
+      {/* Custom animations */}
+      <style jsx global>{`
+        /* Typing cursor animation */
+        .typing-cursor {
+          display: inline-block;
+          margin-left: 0.1em;
+          animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        
+        /* Progress bar sweep animation */
+        @keyframes sweep {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        
+        .animate-sweep {
+          animation: sweep 3s ease-in-out infinite;
+        }
+        
+        /* Shine animation for progress bar */
+        @keyframes shine {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        
+        .animate-shine {
+          animation: shine 3s linear infinite;
+        }
+        
+        /* Confetti animation */
+        .confetti-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 100;
+          overflow: hidden;
+        }
+        
+        .confetti {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-radius: 1px;
+          animation: confetti-fall linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(-10%) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
-};
+}
