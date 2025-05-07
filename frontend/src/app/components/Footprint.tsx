@@ -28,7 +28,7 @@ interface LeaderboardEntry {
 }
 
 export default function Footprints() {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [provider, setProvider] = useState<ethers.JsonRpcProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [walletAddress, setWalletAddress] = useState<string>("");
@@ -39,9 +39,10 @@ export default function Footprints() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([20, 0]);
   const [mapZoom, setMapZoom] = useState<number>(2);
   const [shareStatus, setShareStatus] = useState<string>("");
+  const [newAddress, setNewAddress] = useState<string>("");
 
   // Initialize web3 connection
-  const initWeb3 = async () => {
+  const initWeb3 = async (e: any) => {
     if (typeof window === 'undefined' || typeof (window as any).ethereum === "undefined") {
       setError("Please install MetaMask!");
       return;
@@ -51,28 +52,24 @@ export default function Footprints() {
     setError("");
 
     try {
-      const ethereum = (window as any).ethereum;
-      const web3Provider = new ethers.BrowserProvider(ethereum);
-      await ethereum.request({ method: "eth_requestAccounts" });
-      const web3Signer = await web3Provider.getSigner();
-      
+      console.log('starting..')
+      const web3Provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+      console.log(web3Provider)
       const network = await web3Provider.getNetwork();
       const chainId = Number(network.chainId);
+      console.log(chainId);
       
       if (chainId !== BASE_CHAIN_ID) {
         await switchToBase();
       }
 
-      const web3Contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, web3Signer);
-      const address = await web3Signer.getAddress();
-
+      const web3Contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, web3Provider);
       setProvider(web3Provider);
-      setSigner(web3Signer);
       setContract(web3Contract);
-      setWalletAddress(address);
+      setWalletAddress(newAddress);
 
       // Load user data first then leaderboard
-      await loadUserData(web3Contract, address);
+      await loadUserData(web3Contract, newAddress);
       await loadLeaderboard(web3Contract);
 
       // Center map on user's most recent POAP if one exists
@@ -196,11 +193,19 @@ export default function Footprints() {
           </p>
           
           {!walletAddress ? (
+            <>
+            <input
+            type="text"
+            onChange={(e) => setNewAddress(e.target.value)}
+            placeholder="0x..."
+            className="p-2 border border-gray-400 rounded text-white border-2 w-100"
+          />
             <button
               onClick={initWeb3}
               disabled={loading}
               className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center mx-auto"
             >
+            
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
@@ -209,10 +214,11 @@ export default function Footprints() {
               ) : (
                 <>
                   <User className="h-5 w-5 mr-2" />
-                  Connect Wallet
+                  EUREKA
                 </>
               )}
             </button>
+            </>
           ) : (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <div className="px-4 py-2 rounded-lg bg-gray-800/70 text-blue-300 font-mono text-sm">
@@ -356,9 +362,9 @@ export default function Footprints() {
             <div className="w-20 h-20 mx-auto bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
               <Map className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-300 mb-2">Connect Your Wallet</h3>
+            <h3 className="text-xl font-medium text-gray-300 mb-2">Add Your Wallet</h3>
             <p className="text-gray-400 mb-4">
-              Connect your wallet to view your exploration history and POAPs on the map
+              Add your wallet to view your exploration history and POAPs on the map
             </p>
           </div>
         )}
