@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Map, Info, Footprints } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -45,27 +46,38 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - All links go to home */}
-          <div className="hidden md:flex space-x-8 items-center">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex space-x-6 items-center">
             <Link
               href="/"
-              className={`px-1 py-2 text-sm font-medium ${isActive('/')} relative group`}
+              className={`px-1 py-2 text-sm font-medium ${isActive('/')} relative group flex items-center`}
             >
+              <Map className="h-4 w-4 mr-1.5" />
               Home
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
             <Link
               href="/about"
-              className={`px-1 py-2 text-sm font-medium ${isActive('/about')} relative group`}
+              className={`px-1 py-2 text-sm font-medium ${isActive('/about')} relative group flex items-center`}
             >
+              <Info className="h-4 w-4 mr-1.5" />
               About
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
             <Link
+              href="/footprints"
+              className={`px-1 py-2 text-sm font-medium ${isActive('/footprints')} relative group flex items-center`}
+            >
+              <Footprints className="h-4 w-4 mr-1.5" />
+              My Footprints
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link
               href="/"
-              className="px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
+              className="ml-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
             >
               Start Hunt
             </Link>
@@ -93,7 +105,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu, show/hide based on menu state - All links go to home */}
+      {/* Mobile menu */}
       <div className={`md:hidden ${menuOpen ? "block" : "hidden"} bg-black/95 backdrop-blur-md border-t border-gray-800`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link
@@ -102,9 +114,10 @@ export default function Navbar() {
               pathname === "/" 
                 ? "bg-gray-900 text-white" 
                 : "text-gray-300 hover:bg-gray-800 hover:text-white"
-            }`}
+            } flex items-center`}
             onClick={() => setMenuOpen(false)}
           >
+            <Map className="h-5 w-5 mr-2" />
             Home
           </Link>
           
@@ -114,17 +127,32 @@ export default function Navbar() {
               pathname === "/about" 
                 ? "bg-gray-900 text-white" 
                 : "text-gray-300 hover:bg-gray-800 hover:text-white"
-            }`}
+            } flex items-center`}
             onClick={() => setMenuOpen(false)}
           >
+            <Info className="h-5 w-5 mr-2" />
             About
           </Link>
           
           <Link
-            href="/"
-            className="block px-3 py-2 mt-4 rounded-md text-base font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+            href="/footprints"
+            className={`block px-3 py-2 rounded-md text-base font-medium ${
+              pathname === "/footprints" 
+                ? "bg-gray-900 text-white" 
+                : "text-gray-300 hover:bg-gray-800 hover:text-white"
+            } flex items-center`}
             onClick={() => setMenuOpen(false)}
           >
+            <Footprints className="h-5 w-5 mr-2" />
+            My Footprints
+          </Link>
+          
+          <Link
+            href="/"
+            className="block px-3 py-2 mt-4 rounded-md text-base font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center"
+            onClick={() => setMenuOpen(false)}
+          >
+            <Map className="h-5 w-5 mr-2" />
             Start Hunt
           </Link>
         </div>

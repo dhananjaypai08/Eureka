@@ -33,4 +33,10 @@ export interface Place {
     latitude: number;
     longitude: number;
   }
-    
+  
+  export interface MintMetadata {
+    ipfs_url: string;
+    latitude: string;
+    longitude: string;
+    city: string;
+  }

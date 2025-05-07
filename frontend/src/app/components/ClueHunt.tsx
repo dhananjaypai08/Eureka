@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { calculateDistance, getCurrentLocation, shuffleArray, detectCity } from "../utils/geoUtils";
 import { connectWallet, sendReward, uploadToIPFS, mintNFT } from "../utils/web3Utils";
 import { ExternalLink, Camera } from "lucide-react";
-import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
+import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal, MintMetadata } from "../types";
+import { Lateef } from "next/font/google";
 
 // Get the number of clues per game from environment variables
 const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "4");
@@ -19,6 +20,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   const [imageUploaded, setImageUploaded] = useState<boolean>(false);
   const [currentUserLocation, setCurrentUserLocation] = useState<UserLocationMinimal| null>(null);
+  const [ImageUserMintData, setImageUserMintData] = useState<MintMetadata[] | []>([]);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -168,7 +170,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         // Last place verified - show reward screen
         setGameCompleted(true);
       }
-    }, 2000);
+    }, 1000);
     
   }, [imageUploaded]);
 
@@ -185,26 +187,19 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           setLocationError("Please verify your location first");
           return;
         }
-  
         const city = await detectCity(
           currentUserLocation.latitude,
           currentUserLocation.longitude
         );
-  
-        const mintResult = await mintNFT(
-          "0xc4D54642fCb41dCBe9c065c855cB3138eDf5db6C",
-          ipfsUrl,
-          currentUserLocation.latitude.toString(),
-          currentUserLocation.longitude.toString(),
-          city
-        );
-  
-        if (!mintResult.success) {
-          setLocationError("NFT minting failed");
-          return;
+        const newmetadata = {
+          ipfs_url: ipfsUrl,
+          latitude: currentUserLocation.latitude.toString(),
+          longitude: currentUserLocation.longitude.toString(),
+          city: city
         }
-  
-        console.log("NFT minted: ", mintResult);
+        setImageUserMintData(prevItems => [...prevItems, newmetadata]);
+        console.log(ImageUserMintData)
+        
         setImageUploaded(true);
         setPreviewUrl(null);
       } catch (error) {
@@ -243,6 +238,25 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     setRewardResult(null);
     
     try {
+      console.log(walletAddress);
+      console.log(ImageUserMintData, ImageUserMintData.length);
+      for(let i = 0; i< ImageUserMintData.length; i++){
+        console.log(ImageUserMintData)
+        const mintResult = await mintNFT(
+          walletAddress,
+          ImageUserMintData[i].ipfs_url,
+          ImageUserMintData[i].latitude,
+          ImageUserMintData[i].longitude,
+          ImageUserMintData[i].city
+        );
+        console.log(mintResult);
+        if (!mintResult.success) {
+          setLocationError("NFT minting failed");
+          return;
+        }
+  
+        console.log("NFT minted: ", mintResult);
+      }
       const result = await sendReward(walletAddress, REWARD_AMOUNT);
       setRewardResult(result);
     } catch (error) {
