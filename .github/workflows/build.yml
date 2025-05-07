@@ -1,0 +1,31 @@
+name: build frontend
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install node
+          npm install
+
+      - name: Build Frontend app (macOS)
+        run: npm run build
