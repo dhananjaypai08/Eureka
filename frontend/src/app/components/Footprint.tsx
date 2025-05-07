@@ -43,10 +43,6 @@ export default function Footprints() {
 
   // Initialize web3 connection
   const initWeb3 = async (e: any) => {
-    if (typeof window === 'undefined' || typeof (window as any).ethereum === "undefined") {
-      setError("Please install MetaMask!");
-      return;
-    }
 
     setLoading(true);
     setError("");
