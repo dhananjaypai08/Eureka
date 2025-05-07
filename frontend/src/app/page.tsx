@@ -146,11 +146,11 @@ export default function Home() {
               </button>
               
               <a 
-                href="/about" 
+                href="/footprints" 
                 className="px-8 py-4 rounded-xl border border-blue-400 hover:bg-blue-900/30 text-blue-100 font-medium transition-all w-full sm:w-auto flex items-center justify-center group"
               >
                 <Coins className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
-                VIEW REWARDS
+                VIEW FOOTPRINTS
               </a>
             </div>
 

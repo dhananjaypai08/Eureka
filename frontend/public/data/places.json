@@ -133,5 +133,14 @@
     "longitude": 76.32611265158349,
     "city": "McLeodGanj",
     "thresholdDistance": 20
+  },
+  {
+    "id": 16,
+    "name": "Bouganvillea rooftop Hot place",
+    "clue": "This is the only place in bouganvillea rooftop where fellows cowork and is a hotspace",
+    "latitude": 32.23686368379722,
+    "longitude": 76.3268293031848,
+    "city": "McleodGanj",
+    "thresholdDistance": 20
   }
 ]
