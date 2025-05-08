@@ -3,26 +3,69 @@ import { ethers } from 'ethers';
 // import { create } from 'ipfs-http-client';
 import contractData from '../../../abi/LocationPOAP.json';
 
-// Check if the browser has a web3 provider (like MetaMask)
-export const isWalletAvailable = (): boolean => {
-  return typeof window !== 'undefined' && 
-         typeof (window as any).ethereum !== 'undefined';
+export const isMobile = (): boolean => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  );
 };
 
-// Connect to wallet and return address
+// Enhanced check for wallet availability
+export const isWalletAvailable = (): boolean => {
+  const hasEthereum = typeof window !== 'undefined' && 
+                     typeof (window as any).ethereum !== 'undefined';
+  
+  // On mobile, we might not detect ethereum directly, but MetaMask might still be installed
+  if (isMobile() && !hasEthereum) {
+    return true; // We'll assume it might be available and try deep linking
+  }
+  
+  return hasEthereum;
+};
+
+// Connect to wallet and return address with mobile support
 export const connectWallet = async (): Promise<string> => {
   if (!isWalletAvailable()) {
     throw new Error("No Web3 wallet detected. Please install MetaMask or another Web3 wallet.");
   }
 
   try {
-    // Request account access - using 'as any' to bypass TypeScript check
     const ethereum = (window as any).ethereum;
-    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
     
-    // Return the first account
-    return accounts[0];
+    // If we're on mobile and don't have ethereum injected (but the function was called),
+    // try to open MetaMask app via deep link
+    if (isMobile() && !ethereum) {
+      // Get the current URL to redirect back after connecting
+      const currentUrl = window.location.href;
+      
+      // Create a deep link to MetaMask
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+      
+      // Open the MetaMask app
+      window.location.href = metamaskDeepLink;
+      
+      // This will redirect away, but we need to throw to prevent further execution
+      throw new Error("Redirecting to MetaMask mobile app...");
+    }
+    
+    // For desktop or if MetaMask is injected on mobile
+    if (ethereum) {
+      // Check if the provider is MetaMask
+      const isMetaMask = ethereum.isMetaMask;
+      
+      // Request accounts access
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      
+      // Return the first account
+      return accounts[0];
+    } else {
+      throw new Error("MetaMask not detected. Please make sure it's installed and unlocked.");
+    }
   } catch (error) {
+    // Check if it's our redirection error, in which case we just return empty to handle later
+    if ((error as Error).message === "Redirecting to MetaMask mobile app...") {
+      throw error; // Rethrow to handle in the UI
+    }
+    
     console.error("Error connecting to wallet:", error);
     throw new Error("Failed to connect to your wallet. Please try again.");
   }
