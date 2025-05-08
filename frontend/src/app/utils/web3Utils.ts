@@ -16,46 +16,26 @@ export const isWalletAvailable = (): boolean => {
 };
 
 // Connect to wallet and return address with mobile support
-export const connectWallet = async (): Promise<string> => {
-  // Check if we're on mobile
-  const mobile = isMobile();
-  
-  // Check if ethereum is injected
-  const ethereum = typeof window !== 'undefined' ? (window as any).ethereum : undefined;
-  
-  // If we have ethereum injected, use it regardless of platform
-  if (ethereum) {
-    try {
-      // Request account access
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      
-      // Return the first account
-      return accounts[0];
-    } catch (error) {
-      console.error("Error connecting to wallet:", error);
-      throw new Error("Failed to connect to your wallet. Please try again.");
+export async function connectWallet(): Promise<string> {
+  if (typeof window === "undefined") throw new Error("No window");
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (!window.ethereum) {
+    if (isMobile) {
+      // Redirect to MetaMask mobile with deep link to your dapp
+      const dappUrl = encodeURIComponent(window.location.href);
+      window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+      throw new Error("METAMASK_REDIRECT");
+    } else {
+      throw new Error("MetaMask not installed");
     }
-  } 
-  // If we're on mobile but don't have ethereum, try to open MetaMask mobile app
-  else if (mobile) {
-    // Get current URL for deep linking back to our application
-    const currentUrl = encodeURIComponent(window.location.href);
-    
-    // Create a MetaMask deep link
-    // This format will open MetaMask mobile and then return to our dApp
-    const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-    
-    // Open MetaMask app
-    window.location.href = metamaskDeepLink;
-    
-    // This is not an error, but we need to communicate what happened
-    throw new Error("METAMASK_REDIRECT");
-  } 
-  // Not mobile and no ethereum - genuine missing wallet case
-  else {
-    throw new Error("No Web3 wallet detected. Please install MetaMask or another Web3 wallet.");
   }
-};
+
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+  return accounts[0];
+}
+
 
 // Send ETH reward to the user's wallet
 export const sendReward = async (
