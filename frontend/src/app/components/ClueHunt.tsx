@@ -722,10 +722,12 @@ export const ClueHunt: React.FC<ClueHuntProps> = ({ initialUserLocation }) => {
     } catch (error) {
       console.error("Error connecting wallet:", error);
       
-      // Handle the special redirection case
-      if ((error as Error).message === "Redirecting to MetaMask mobile app...") {
-        setWalletError("Opening MetaMask app... Please return to this page after connecting.");
-        // We've already redirected, so we don't need to do anything else
+      // Special case for MetaMask mobile redirect
+      if ((error as Error).message === "METAMASK_REDIRECT") {
+        // We're already redirecting to MetaMask, so we show a message
+        // This code won't actually execute because we're navigating away,
+        // but we'll set it in case the redirect somehow fails
+        setWalletError("Opening MetaMask mobile app...");
         return;
       }
       
