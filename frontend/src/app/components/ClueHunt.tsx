@@ -526,25 +526,24 @@ export const ClueHunt: React.FC<ClueHuntProps> = ({ initialUserLocation }) => {
   // Typing animation for clue text
   useEffect(() => {
     if (!currentPlace) return;
-    
-    // Reset typed clue when place changes
+  
+    // Reset typed clue
     setTypedClue("");
-    
+  
     let index = 0;
     const text = currentPlace.clue;
-    
-    // Typing animation interval
+  
     const typingInterval = setInterval(() => {
-      if (index < text.length) {
-        setTypedClue((prev) => prev + text.charAt(index));
-        index++;
-      } else {
+      index++;
+      setTypedClue(text.slice(0, index));
+  
+      if (index >= text.length) {
         clearInterval(typingInterval);
       }
-    }, 30); // Speed of typing
-    
+    }, 30);
+  
     return () => clearInterval(typingInterval);
-  }, [currentPlace]);
+  }, [currentPlace]);  
   
   // Update explorer level based on completed places
   useEffect(() => {
