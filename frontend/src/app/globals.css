@@ -120,3 +120,67 @@
     @apply bg-background text-foreground;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mapbox styles */
+.mapboxgl-map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  filter: brightness(0.8) contrast(1.2);
+}
+
+.mapboxgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.mapboxgl-ctrl-top-right {
+  top: 10px !important;
+  right: 10px !important;
+}
+
+.mapboxgl-popup-content {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+.mapboxgl-ctrl-group {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(51, 65, 85, 0.5) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.mapboxgl-ctrl-group button {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Custom marker styles */
+.mapboxgl-marker {
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+}
+
+.mapboxgl-marker svg {
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.3));
+}

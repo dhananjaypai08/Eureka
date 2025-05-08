@@ -303,53 +303,105 @@ export default function Footprints() {
             </div>
 
             {/* Leaderboard */}
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700 shadow-xl overflow-hidden">
-              <div className="p-4 border-b border-gray-700 bg-gray-800/50">
-                <h2 className="font-bold text-xl text-white flex items-center">
-                  <Trophy className="h-5 w-5 mr-2 text-yellow-500" />
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700 shadow-xl overflow-hidden relative">
+              {/* Decorative elements */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+              <div className="p-4 border-b border-gray-700 bg-gradient-to-r from-gray-800/50 to-gray-900/50 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
+                <h2 className="font-bold text-xl text-white flex items-center relative">
+                  <Trophy className="h-5 w-5 mr-2 text-yellow-500 animate-pulse" />
                   Explorer Leaderboard
+                  <span className="ml-2 text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    Live
+                  </span>
                 </h2>
               </div>
-              <div className="p-4">
+
+              <div className="p-4 relative">
                 {leaderboard.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    Loading leaderboard data...
+                  <div className="text-center py-12 text-gray-400">
+                    <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-sm font-medium">Loading leaderboard data...</p>
+                    <p className="text-xs text-gray-500 mt-2">Fetching the latest explorer rankings</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {leaderboard.slice(0, 10).map((item, index) => (
                       <div
                         key={index}
-                        className={`flex justify-between items-center p-3 rounded-lg ${
+                        className={`group flex justify-between items-center p-4 rounded-lg transition-all duration-300 hover:scale-[1.02] ${
                           item.user.toLowerCase() === walletAddress.toLowerCase()
-                            ? "bg-blue-900/30 border border-blue-700" 
-                            : "bg-gray-800/50"
+                            ? "bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/50 shadow-lg shadow-blue-500/10"
+                            : "bg-gray-800/50 hover:bg-gray-800/70"
                         }`}
                       >
                         <div className="flex items-center">
-                          <div className={`h-6 w-6 rounded-full flex items-center justify-center mr-3 text-xs font-bold ${
-                            index === 0 ? "bg-yellow-500 text-yellow-900" :
-                            index === 1 ? "bg-gray-300 text-gray-800" :
-                            index === 2 ? "bg-amber-700 text-amber-100" :
-                            "bg-gray-700 text-gray-300"
-                          }`}>
+                          <div 
+                            className={`h-10 w-10 rounded-full flex items-center justify-center mr-4 text-sm font-bold transition-all duration-300 relative ${
+                              index === 0 
+                                ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 shadow-lg shadow-yellow-500/20" 
+                                : index === 1 
+                                ? "bg-gradient-to-br from-gray-200 to-gray-400 text-gray-800 shadow-lg shadow-gray-400/20"
+                                : index === 2 
+                                ? "bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 shadow-lg shadow-amber-600/20"
+                                : "bg-gradient-to-br from-gray-700 to-gray-900 text-gray-300"
+                            }`}
+                          >
                             {index + 1}
+                            {index < 3 && (
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full border-2 border-gray-800"></div>
+                            )}
                           </div>
-                          <span className="font-medium text-sm">
-                            {item.user.toLowerCase() === walletAddress.toLowerCase()
-                              ? "You"
-                              : `${item.user.slice(0, 6)}...${item.user.slice(-4)}`}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm group-hover:text-blue-300 transition-colors">
+                              {item.user.toLowerCase() === walletAddress.toLowerCase()
+                                ? "You"
+                                : `${item.user.slice(0, 6)}...${item.user.slice(-4)}`}
+                            </span>
+                            <span className="text-xs text-gray-400 flex items-center">
+                              {index === 0 ? (
+                                <span className="flex items-center">
+                                  <span className="mr-1">🏆</span> Champion
+                                </span>
+                              ) : index === 1 ? (
+                                <span className="flex items-center">
+                                  <span className="mr-1">🥈</span> Runner-up
+                                </span>
+                              ) : index === 2 ? (
+                                <span className="flex items-center">
+                                  <span className="mr-1">🥉</span> Third Place
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <span className="mr-1">🌟</span> Explorer
+                                </span>
+                              )}
+                            </span>
+                          </div>
                         </div>
-                        <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full">
-                          {item.poaps.toString()} POAPs
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-4 py-1.5 rounded-full font-medium shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all">
+                            {item.poaps.toString()} POAPs
+                          </span>
+                          {index < 3 && (
+                            <span className="text-xs text-gray-400 mt-1.5 group-hover:text-gray-300 transition-colors">
+                              {index === 0 ? "Top Explorer" : 
+                               index === 1 ? "Close Second" : 
+                               "Great Job!"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
+
+              {/* Bottom gradient border */}
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500"></div>
             </div>
           </div>
         ) : (
