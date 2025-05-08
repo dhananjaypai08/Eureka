@@ -23,10 +23,9 @@ export async function connectWallet(): Promise<string> {
 
   if (!window.ethereum) {
     if (isMobile) {
-      // Remove protocol before encoding
+      // MetaMask expects plain domain (no https://), unencoded
       const currentUrl = window.location.href.replace(/^https?:\/\//, "");
-      const encodedUrl = encodeURIComponent(currentUrl);
-      window.location.href = `https://metamask.app.link/dapp/${encodedUrl}`;
+      window.location.href = `https://metamask.app.link/dapp/${currentUrl}`;
       throw new Error("METAMASK_REDIRECT");
     } else {
       throw new Error("MetaMask not installed");
@@ -36,7 +35,6 @@ export async function connectWallet(): Promise<string> {
   const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
   return accounts[0];
 }
-
 
 // Send ETH reward to the user's wallet
 export const sendReward = async (
