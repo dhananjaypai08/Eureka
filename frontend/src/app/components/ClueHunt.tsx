@@ -657,8 +657,8 @@ export const ClueHunt: React.FC<ClueHuntProps> = ({ initialUserLocation }) => {
           setTimeout(() => {
             setShowMap(false);
             setClueFound(true);
-          }, 3000);
-        }, 1000);
+          }, 200);
+        }, 200);
         
       } else {
         setVerificationResult({
