@@ -1,0 +1,14 @@
+[variables]
+node_version = "18"
+
+[phases.setup]
+nixPkgs = ["nodejs"]
+
+[phases.install]
+cmds = ["cd frontend && npm install --legacy-peer-deps"]
+
+[phases.build]
+cmds = ["cd frontend && npm run build"]
+
+[start]
+cmd = "cd frontend && npm start"
