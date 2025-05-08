@@ -54,7 +54,7 @@ export default function Footprints() {
       const network = await web3Provider.getNetwork();
       const chainId = Number(network.chainId);
       console.log(chainId);
-      
+
       if (chainId !== BASE_CHAIN_ID) {
         await switchToBase();
       }
@@ -121,7 +121,7 @@ export default function Footprints() {
       console.log("Fetching leaderboard data");
       const poapCounts = await contract.get_all_user_poaps_count();
       console.log("Leaderboard data received:", poapCounts);
-      
+
       // Sort by number of POAPs (descending) - Handle different formats safely
       const sorted = [...poapCounts].sort((a, b) => {
         // Get numeric values regardless of format
@@ -129,7 +129,7 @@ export default function Footprints() {
         const bCount = Number(b.poaps.toString());
         return bCount - aCount; // Compare as numbers
       });
-      
+
       setLeaderboard(sorted);
     } catch (error) {
       console.error("Error loading leaderboard:", error);
@@ -143,7 +143,7 @@ export default function Footprints() {
       const mostRecent = userPoaps[userPoaps.length - 1];
       const lat = parseFloat(mostRecent.latitude);
       const lng = parseFloat(mostRecent.longitude);
-      
+
       if (!isNaN(lat) && !isNaN(lng)) {
         setMapCenter([lat, lng]);
         setMapZoom(11);
@@ -162,12 +162,12 @@ export default function Footprints() {
       // Create a message about the user's exploration
       const locationCount = userPoaps.length;
       const latestLocation = userPoaps[userPoaps.length - 1].title;
-      
+
       const tweetText = `I've explored ${locationCount} unique locations on Eureka! My latest discovery: ${latestLocation}. Join the treasure hunt and earn rewards with privacy-preserving verification! #Eureka #ScavengerHunt`;
-      
+
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
       window.open(twitterUrl, '_blank');
-      
+
       setShareStatus("Share window opened!");
       setTimeout(() => setShareStatus(""), 3000);
     } catch (error) {
@@ -187,33 +187,33 @@ export default function Footprints() {
           <p className="text-blue-100 text-lg max-w-2xl mx-auto mb-8">
             View all the locations you've discovered and verified with zero-knowledge proofs, securely stored on base.
           </p>
-          
+
           {!walletAddress ? (
             <>
-            <input
-            type="text"
-            onChange={(e) => setNewAddress(e.target.value)}
-            placeholder="0x..."
-            className="p-2 border border-gray-400 rounded text-white border-2 w-100"
-          />
-            <button
-              onClick={initWeb3}
-              disabled={loading}
-              className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center mx-auto"
-            >
-            
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <User className="h-5 w-5 mr-2" />
-                  EUREKA
-                </>
-              )}
-            </button>
+              <input
+                type="text"
+                onChange={(e) => setNewAddress(e.target.value)}
+                placeholder="0x..."
+                className="p-2 border border-gray-400 rounded text-white border-2 w-100"
+              />
+              <button
+                onClick={initWeb3}
+                disabled={loading}
+                className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium transition-all shadow-lg hover:shadow-blue-500/30 flex items-center justify-center mx-auto"
+              >
+
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <User className="h-5 w-5 mr-2" />
+                    EUREKA
+                  </>
+                )}
+              </button>
             </>
           ) : (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -254,9 +254,14 @@ export default function Footprints() {
                     className="z-10"
                   >
                     <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='© OpenStreetMap'
+                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      attribution="© OpenStreetMap, © CARTO"
+                      subdomains="abcd"
+                      maxZoom={20}
+                      minZoom={0}
                     />
+
+
                     {userPoaps.map((poap, index) => {
                       const lat = parseFloat(poap.latitude);
                       const lng = parseFloat(poap.longitude);
@@ -332,23 +337,21 @@ export default function Footprints() {
                     {leaderboard.slice(0, 10).map((item, index) => (
                       <div
                         key={index}
-                        className={`group flex justify-between items-center p-4 rounded-lg transition-all duration-300 hover:scale-[1.02] ${
-                          item.user.toLowerCase() === walletAddress.toLowerCase()
-                            ? "bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/50 shadow-lg shadow-blue-500/10"
-                            : "bg-gray-800/50 hover:bg-gray-800/70"
-                        }`}
+                        className={`group flex justify-between items-center p-4 rounded-lg transition-all duration-300 hover:scale-[1.02] ${item.user.toLowerCase() === walletAddress.toLowerCase()
+                          ? "bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-700/50 shadow-lg shadow-blue-500/10"
+                          : "bg-gray-800/50 hover:bg-gray-800/70"
+                          }`}
                       >
                         <div className="flex items-center">
-                          <div 
-                            className={`h-10 w-10 rounded-full flex items-center justify-center mr-4 text-sm font-bold transition-all duration-300 relative ${
-                              index === 0 
-                                ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 shadow-lg shadow-yellow-500/20" 
-                                : index === 1 
+                          <div
+                            className={`h-10 w-10 rounded-full flex items-center justify-center mr-4 text-sm font-bold transition-all duration-300 relative ${index === 0
+                              ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-900 shadow-lg shadow-yellow-500/20"
+                              : index === 1
                                 ? "bg-gradient-to-br from-gray-200 to-gray-400 text-gray-800 shadow-lg shadow-gray-400/20"
-                                : index === 2 
-                                ? "bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 shadow-lg shadow-amber-600/20"
-                                : "bg-gradient-to-br from-gray-700 to-gray-900 text-gray-300"
-                            }`}
+                                : index === 2
+                                  ? "bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 shadow-lg shadow-amber-600/20"
+                                  : "bg-gradient-to-br from-gray-700 to-gray-900 text-gray-300"
+                              }`}
                           >
                             {index + 1}
                             {index < 3 && (
@@ -388,9 +391,9 @@ export default function Footprints() {
                           </span>
                           {index < 3 && (
                             <span className="text-xs text-gray-400 mt-1.5 group-hover:text-gray-300 transition-colors">
-                              {index === 0 ? "Top Explorer" : 
-                               index === 1 ? "Close Second" : 
-                               "Great Job!"}
+                              {index === 0 ? "Top Explorer" :
+                                index === 1 ? "Close Second" :
+                                  "Great Job!"}
                             </span>
                           )}
                         </div>
@@ -425,8 +428,8 @@ export default function Footprints() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {userPoaps.map((poap, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="bg-gradient-to-b from-gray-800/80 to-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-xl hover:border-blue-600/50 transition-all"
                 >
                   <h3 className="text-lg font-bold mb-3 text-blue-300">{poap.title}</h3>
@@ -466,7 +469,7 @@ export default function Footprints() {
               <p className="text-gray-400 mb-6">
                 Showcase your exploration achievements with friends and followers
               </p>
-              
+
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
                   onClick={shareOnTwitter}
