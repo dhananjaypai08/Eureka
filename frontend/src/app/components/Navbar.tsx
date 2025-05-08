@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Map, Info, Footprints } from "lucide-react";
+import { Map, Info, Footprints, Plus } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -72,6 +72,15 @@ export default function Navbar() {
             >
               <Footprints className="h-4 w-4 mr-1.5" />
               My Footprints
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
+            <Link
+              href="/createQuest"
+              className={`px-1 py-2 text-sm font-medium ${isActive('/create-quest')} relative group flex items-center`}
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Create Quest
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
@@ -145,6 +154,19 @@ export default function Navbar() {
           >
             <Footprints className="h-5 w-5 mr-2" />
             My Footprints
+          </Link>
+          
+          <Link
+            href="/createQuest"
+            className={`block px-3 py-2 rounded-md text-base font-medium ${
+              pathname === "/createQuest" 
+                ? "bg-gray-900 text-white" 
+                : "text-gray-300 hover:bg-gray-800 hover:text-white"
+            } flex items-center`}
+            onClick={() => setMenuOpen(false)}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create Quest
           </Link>
           
           <Link

@@ -21,6 +21,7 @@ import { CardHeader } from "@/components/ui/card";
 import { CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
@@ -272,15 +273,18 @@ export default function Home() {
                       Upload custom coordinates to create personalized treasure hunts for friends or communities. 
                       Set your own rewards and craft unique challenges based on your favorite locations.
                     </p>
+                    <Link href="/createQuest">
                     <Button className="h-11 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 border border-indigo-700/50 shadow-lg shadow-indigo-900/5">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Quest
                     </Button>
+                    </Link>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+          
 
           {/* Game Stats */}
           <div className="relative z-10 w-full max-w-6xl mx-auto mb-20">
