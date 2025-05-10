@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Plus, MapPin, Compass, Target, Building } from 'lucide-react'
+import { detectCity } from '../utils/geoUtils'
 
 export default function CreateQuest() {
   const [latitude, setLatitude] = useState<number | null>(null)
@@ -15,15 +16,17 @@ export default function CreateQuest() {
   const [name, setName] = useState('')
   const [clue, setClue] = useState('')
   const [thresholdDistance, setThresholdDistance] = useState(20)
-  const [city, setCity] = useState('')
+  const [city, setCity] = useState('detecting')
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
 
   // Fetch user location on mount
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((pos) => {
+    navigator.geolocation.getCurrentPosition(async(pos) => {
       setLatitude(pos.coords.latitude)
       setLongitude(pos.coords.longitude)
+      const user_city = await detectCity(pos.coords.latitude, pos.coords.longitude)
+      setCity(user_city)
     })
   }, [])
 
@@ -153,7 +156,8 @@ export default function CreateQuest() {
                 </Label>
                 <Input
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  disabled={true}
+                  // onChange={(e) => setCity(e.target.value)}
                   className="bg-gray-900/50 border-gray-800 focus:border-indigo-500 text-white placeholder:text-gray-500"
                   placeholder="Enter the city where this location is found"
                 />
