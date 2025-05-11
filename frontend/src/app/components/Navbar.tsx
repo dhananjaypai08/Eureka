@@ -84,12 +84,12 @@ export default function Navbar() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
-            <Link
+            {/* <Link
               href="/"
               className="ml-2 px-4 py-2 rounded-md text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
             >
               Start Hunt
-            </Link>
+            </Link> */}
           </div>
 
           {/* Mobile menu button */}
@@ -169,14 +169,14 @@ export default function Navbar() {
             Create Quest
           </Link>
           
-          <Link
+          {/* <Link
             href="/"
             className="block px-3 py-2 mt-4 rounded-md text-base font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center"
             onClick={() => setMenuOpen(false)}
           >
             <Map className="h-5 w-5 mr-2" />
             Start Hunt
-          </Link>
+          </Link> */}
         </div>
       </div>
     </nav>
