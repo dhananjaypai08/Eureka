@@ -448,7 +448,7 @@ export const ClueHunt: React.FC<ClueHuntProps> = ({ initialUserLocation }) => {
   const [sendingReward, setSendingReward] = useState<boolean>(false);
   const [rewardResult, setRewardResult] = useState<RewardResult | null>(null);
   
-  const explorerBaseUrl = "https://sepolia.basescan.org/tx/";
+  const explorerBaseUrl = process.env.NEXT_PUBLIC_TESTNET_EXPLORER;
   const currentPlace = places[currentPlaceIndex];
   
   // Load places from places.json and select random ones for this game
