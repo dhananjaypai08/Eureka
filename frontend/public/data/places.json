@@ -6,7 +6,7 @@
     "latitude": 19.242284696517313,
     "longitude": 73.13484960148622,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 2,
@@ -15,7 +15,7 @@
     "latitude": 19.248736,
     "longitude": 73.140214,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 5000
   },
   {
     "id": 3,
@@ -24,7 +24,7 @@
     "latitude": 19.242199638157526,
     "longitude": 73.13656040841443,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 5000
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@
     "latitude": 19.24206398976848,
     "longitude": 73.13971732162364,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 2000
   },
   {
     "id": 5,
@@ -42,7 +42,7 @@
     "latitude": 19.244546664001724,
     "longitude": 73.13150821451312,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 20000
   },
   {
     "id": 6,
@@ -51,7 +51,7 @@
     "latitude": 19.24689932040889,
     "longitude": 73.13326772461596,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 2000
   },
   {
     "id": 7,
@@ -141,6 +141,15 @@
     "latitude": 32.23686368379722,
     "longitude": 76.3268293031848,
     "city": "McleodGanj",
+    "thresholdDistance": 20
+  },
+  {
+    "id": 17,
+    "name": "Eesha Krupa Apartment",
+    "clue": "This is the only apartment that is not gone under redevelopment yet, and is near Kotak Mahindra Bank, Rambaug Lane 1",
+    "latitude": 19.242581003605554,
+    "longitude": 73.13482255850738,
+    "city": "Kalyan",
     "thresholdDistance": 20
   }
 ]
