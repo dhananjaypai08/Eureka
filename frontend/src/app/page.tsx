@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import { LocationRequest } from "./components/LocationRequest";
 import { 
   Compass, 
@@ -12,7 +13,8 @@ import {
   Upload, 
   ChevronRight,
   Plus,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,12 +24,31 @@ import { CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import contractData from "../../abi/LocationPOAP.json";
+
+// Contract configuration
+const CONTRACT_ADDRESS = contractData.address;
+const BASE_CHAIN_ID = 84532;
+const BASE_RPC = process.env.NEXT_PUBLIC_RPC_URL;
+
+// ABI from imported contract data
+const ABI = contractData.abi;
+
+interface LeaderboardEntry {
+  user: string;
+  poaps: ethers.BigNumberish;
+}
 
 export default function Home() {
   const [gameStarted, setGameStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+  
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,6 +60,46 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Initialize contract and load leaderboard data
+  useEffect(() => {
+    const loadLeaderboardData = async () => {
+      try {
+        setLeaderboardLoading(true);
+        setLeaderboardError(null);
+        
+        // Create provider
+        const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+        
+        // Create contract instance
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        
+        // Load leaderboard data
+        console.log("Fetching leaderboard data");
+        const poapCounts = await contract.get_all_user_poaps_count();
+        console.log("Leaderboard data received:", poapCounts);
+        
+        // Sort by number of POAPs (descending)
+        const sorted = [...poapCounts].sort((a, b) => {
+          // Get numeric values regardless of format
+          const aCount = Number(a.poaps.toString());
+          const bCount = Number(b.poaps.toString());
+          return bCount - aCount; // Compare as numbers
+        });
+        
+        setLeaderboard(sorted);
+      } catch (error) {
+        console.error("Error loading leaderboard:", error);
+        setLeaderboardError("Failed to load leaderboard data. Please try again later.");
+      } finally {
+        setLeaderboardLoading(false);
+      }
+    };
+
+    if (!loading && showContent) {
+      loadLeaderboardData();
+    }
+  }, [loading, showContent]);
 
   const startGameWithIntro = () => {
     setShowIntro(true);
@@ -286,6 +347,71 @@ export default function Home() {
           </div>
           
 
+          
+
+          {/* Leaderboard Preview - UPDATED TO DYNAMIC */}
+          <div className="relative z-10 w-full max-w-6xl mx-auto mb-20">
+            <h3 className="text-2xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
+              TOP HUNTERS THIS WEEK
+            </h3>
+            
+            <Separator className="mb-8 bg-gradient-to-r from-indigo-950 via-violet-900 to-indigo-950 opacity-30 h-px" />
+            
+            <Card className="bg-gray-950/80 backdrop-blur-sm border-gray-800 overflow-hidden shadow-xl">
+              <div className="grid grid-cols-12 text-sm text-gray-400 py-4 px-6 border-b border-gray-800/80">
+                <div className="col-span-1 font-medium">#</div>
+                <div className="col-span-5 font-medium">Hunter</div>
+                <div className="col-span-3 font-medium text-center">Quests</div>
+                <div className="col-span-3 font-medium text-right">Rewards</div>
+              </div>
+              
+              {leaderboardLoading ? (
+                <div className="py-12 text-center">
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-indigo-500" />
+                  <p className="text-gray-400">Loading leaderboard data...</p>
+                </div>
+              ) : leaderboardError ? (
+                <div className="py-12 text-center">
+                  <p className="text-red-400">{leaderboardError}</p>
+                  <Button 
+                    variant="link" 
+                    className="text-indigo-400 hover:text-indigo-300 mt-4"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try Again
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {leaderboard.slice(0, 3).map((item, index) => (
+                    <div key={index} className="grid grid-cols-12 py-5 px-6 border-b border-gray-800/40 hover:bg-gray-900/20 transition-colors">
+                      <div className="col-span-1 font-bold text-amber-500">{index + 1}</div>
+                      <div className="col-span-5 font-medium text-white flex items-center">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-violet-700 mr-3 flex items-center justify-center text-xs shadow-md shadow-indigo-950/50">
+                          {item.user.substring(0, 2)}
+                        </div>
+                        {`${item.user.slice(0, 6)}...${item.user.slice(-4)}`}
+                      </div>
+                      <div className="col-span-3 text-center self-center font-medium text-emerald-400">{item.poaps.toString()}</div>
+                      <div className="col-span-3 text-right self-center font-medium text-emerald-400">
+                        {(Number(item.poaps.toString()) * 0.01).toFixed(2)} ETH
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="px-6 py-4 text-center">
+                    <Link href="/footprints">
+                      <Button variant="link" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center justify-center mx-auto">
+                        View Full Leaderboard
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </>
+              )}
+            </Card>
+          </div>
+
           {/* Game Stats */}
           <div className="relative z-10 w-full max-w-6xl mx-auto mb-20">
             <h3 className="text-2xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
@@ -320,49 +446,6 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-
-          {/* Leaderboard Preview */}
-          <div className="relative z-10 w-full max-w-6xl mx-auto mb-20">
-            <h3 className="text-2xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
-              TOP HUNTERS THIS WEEK
-            </h3>
-            
-            <Separator className="mb-8 bg-gradient-to-r from-indigo-950 via-violet-900 to-indigo-950 opacity-30 h-px" />
-            
-            <Card className="bg-gray-950/80 backdrop-blur-sm border-gray-800 overflow-hidden shadow-xl">
-              <div className="grid grid-cols-12 text-sm text-gray-400 py-4 px-6 border-b border-gray-800/80">
-                <div className="col-span-1 font-medium">#</div>
-                <div className="col-span-5 font-medium">Hunter</div>
-                <div className="col-span-3 font-medium text-center">Quests</div>
-                <div className="col-span-3 font-medium text-right">Rewards</div>
-              </div>
-              
-              {[
-                { rank: 1, name: "CryptoExplorer", quests: 17, rewards: "0.85 ETH" },
-                { rank: 2, name: "TreasureSeeker", quests: 15, rewards: "0.76 ETH" },
-                { rank: 3, name: "QuestMaster", quests: 12, rewards: "0.64 ETH" },
-              ].map((hunter) => (
-                <div key={hunter.rank} className="grid grid-cols-12 py-5 px-6 border-b border-gray-800/40 hover:bg-gray-900/20 transition-colors">
-                  <div className="col-span-1 font-bold text-amber-500">{hunter.rank}</div>
-                  <div className="col-span-5 font-medium text-white flex items-center">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-violet-700 mr-3 flex items-center justify-center text-xs shadow-md shadow-indigo-950/50">
-                      {hunter.name.substring(0, 2)}
-                    </div>
-                    {hunter.name}
-                  </div>
-                  <div className="col-span-3 text-center self-center">{hunter.quests}</div>
-                  <div className="col-span-3 text-right self-center font-medium text-emerald-400">{hunter.rewards}</div>
-                </div>
-              ))}
-              
-              <div className="px-6 py-4 text-center">
-                <Button variant="link" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center justify-center mx-auto">
-                  View Full Leaderboard
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </Card>
           </div>
 
           {/* Footer */}
