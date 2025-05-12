@@ -62,7 +62,7 @@ export default function Navbar() {
               className={`px-1 py-2 text-sm font-medium ${isActive('/about')} relative group flex items-center`}
             >
               <Info className="h-4 w-4 mr-1.5" />
-              About
+              How to play
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
             </Link>
             
