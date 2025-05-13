@@ -193,13 +193,13 @@ export default function Home() {
 
           {/* Feature Scrolls Section */}
           <div className="w-full max-w-6xl mx-auto mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-row-1 md:grid-row-3 gap-8">
               {/* Capture & Collect Scroll */}
-              <div className="relative">
+              <div className="relative left-[-250px]">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
-                    alt="Scroll background" 
+                    alt="Scroll background"
                     layout="fill"
                     objectFit="contain"
                     priority={true}
@@ -215,7 +215,7 @@ export default function Home() {
               </div>
               
               {/* Privacy Shield Scroll */}
-              <div className="relative">
+              <div className="relative left-[170px]">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
@@ -235,7 +235,7 @@ export default function Home() {
               </div>
               
               {/* Real Crypto Rewards Scroll */}
-              <div className="relative">
+              <div className="relative left-[-250px]">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
