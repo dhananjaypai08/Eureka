@@ -1,6 +1,19 @@
 {
   "Mumbai": "/images/cities/mumbai.jpg",
+  "Kalyan": "/images/cities/mumbai.jpg",
+  "Thane": "/images/cities/mumbai.jpg",
   "Dharamshala": "/images/cities/dharamshala.jpg",
+  "Himachal Pradesh": "/images/cities/dharamshala.jpg",
+  "McleodGanj": "/images/cities/dharamshala.jpg",
   "Delhi": "/images/cities/delhi.jpg",
+<<<<<<< HEAD
   "Bangalore": "/images/cities/bangalore.jpg"
 } 
+=======
+  "Bangalore": "/images/cities/bangalore.jpg",
+  "New York": "https://t4.ftcdn.net/jpg/02/54/47/29/360_F_254472908_istASE1GrVX3rJOoLiztdywqkB52Kx9t.jpg",
+  "New York City": "https://t4.ftcdn.net/jpg/02/54/47/29/360_F_254472908_istASE1GrVX3rJOoLiztdywqkB52Kx9t.jpg",
+  "San Francisco": "/images/cities/sanfrancisco.jpg",
+  "United States": "images/cities/sanfrancisco.jpg"
+}
+>>>>>>> 05467a40eefd26997e99f43cb274aba1e0cbbdb4

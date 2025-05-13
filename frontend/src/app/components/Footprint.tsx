@@ -284,10 +284,10 @@ export default function Footprints() {
             {/* Map view */}
             <div className="lg:col-span-2 bg-[#FBF6E9] rounded-md overflow-hidden border-4 border-[#8B4513] shadow-xl relative">
               {/* Map decorative elements */}
-              <div className="absolute top-0 left-0 w-full h-16 bg-[url('/map-border-top.svg')] bg-repeat-x z-10 pointer-events-none opacity-40"></div>
-              <div className="absolute bottom-0 left-0 w-full h-16 bg-[url('/map-border-bottom.svg')] bg-repeat-x z-10 pointer-events-none opacity-40"></div>
-              <div className="absolute left-0 top-0 w-16 h-full bg-[url('/map-border-left.svg')] bg-repeat-y z-10 pointer-events-none opacity-40"></div>
-              <div className="absolute right-0 top-0 w-16 h-full bg-[url('/map-border-right.svg')] bg-repeat-y z-10 pointer-events-none opacity-40"></div>
+              <div className="absolute top-0 left-0 w-full h-16 bg-[url('/map-bg.svg')] bg-repeat-x z-10 pointer-events-none opacity-40"></div>
+              <div className="absolute bottom-0 left-0 w-full h-16 bg-[url('/map-bg.svg')] bg-repeat-x z-10 pointer-events-none opacity-40"></div>
+              <div className="absolute left-0 top-0 w-16 h-full bg-[url('/map-bg.svg')] bg-repeat-y z-10 pointer-events-none opacity-40"></div>
+              <div className="absolute right-0 top-0 w-16 h-full bg-[url('/map-bg.svg')] bg-repeat-y z-10 pointer-events-none opacity-40"></div>
               
               <div className="absolute top-4 right-4 w-24 h-24 z-10 pointer-events-none">
                 <Image src="/compass.svg" alt="Compass Rose" width={96} height={96} className="opacity-70" />
@@ -378,7 +378,7 @@ export default function Footprints() {
             </div>
 
             {/* Leaderboard */}
-            <div className="bg-[url('/parchment-bg.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] shadow-xl overflow-hidden">
+            <div className="bg-[url('/map-paper.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] shadow-xl overflow-hidden">
               <div className="p-4 border-b-2 border-[#8B4513]/50">
                 <h2 className="font-serif font-bold text-xl text-[#6D3B00] flex items-center">
                   <Trophy className="h-5 w-5 mr-2 text-[#C9B037]" />
@@ -429,7 +429,7 @@ export default function Footprints() {
           </div>
         ) : (
           // Placeholder when wallet not connected
-          <div className="text-center p-8 bg-[url('/parchment-bg.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] max-w-md mx-auto">
+          <div className="text-center p-8 bg-[url('/map-paper.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] max-w-md mx-auto">
             <div className="w-20 h-20 mx-auto">
               <Image src="/compass.svg" alt="Compass" width={80} height={80} className="opacity-80" />
             </div>
@@ -514,7 +514,7 @@ export default function Footprints() {
         {/* Share Journey Section */}
         {walletAddress && userPoaps.length > 0 && (
           <div className="mt-12 text-center">
-            <div className="bg-[url('/parchment-bg.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] shadow-xl p-6 max-w-md mx-auto">
+            <div className="bg-[url('/map-paper.svg')] bg-cover bg-center rounded-md border-2 border-[#8B4513] shadow-xl p-6 max-w-md mx-auto">
               <h3 className="text-xl font-bold mb-3 text-[#6D3B00] font-serif">Share Your Journey</h3>
               <p className="text-[#5E4B32] mb-6 font-serif">
                 Showcase your exploration achievements with friends and fellow adventurers
