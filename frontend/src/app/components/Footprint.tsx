@@ -7,6 +7,13 @@ import { Share2, Trophy, Map as MapIcon, X, Camera, ChevronRight, User } from "l
 import "leaflet/dist/leaflet.css";
 import Image from "next/image";
 import contractData from "../../../abi/LocationPOAP.json";
+import locationImagesData from "../../../data/locationImages.json";
+
+interface LocationImageMap {
+  [key: string]: string;
+}
+
+const locationImages = locationImagesData as LocationImageMap;
 
 // Contract configuration
 const CONTRACT_ADDRESS = contractData.address;
@@ -40,7 +47,34 @@ export default function Footprints() {
   const [mapZoom, setMapZoom] = useState<number>(2);
   const [shareStatus, setShareStatus] = useState<string>("");
   const [newAddress, setNewAddress] = useState<string>("");
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
+ const getBackgroundImage = (locationName: string): string => {
+  // Try exact match first
+  if (locationImages[locationName]) {
+    return locationImages[locationName];
+  }
+  
+  // Try case-insensitive match
+  const lowercaseLocationName = locationName.toLowerCase();
+  const keys = Object.keys(locationImages);
+  for (const key of keys) {
+    if (key.toLowerCase() === lowercaseLocationName) {
+      return locationImages[key];
+    }
+  }
+  
+  // Try partial match (if location contains key or key contains location)
+  for (const key of keys) {
+    if (key !== "default" && 
+        (locationName.includes(key) || key.includes(locationName))) {
+      return locationImages[key];
+    }
+  }
+  
+  // Return default if no match found
+  return locationImages.default || "/card.svg";
+};
   // Initialize web3 connection
   const initWeb3 = async () => {
     setLoading(true);
@@ -144,6 +178,14 @@ export default function Footprints() {
         setMapZoom(15); // Higher zoom level for better visibility
       }
     }
+  };
+
+  // Handle image error for a specific POAP card
+  const handleImageError = (index: number) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [index]: true
+    }));
   };
 
   // Share on Twitter/X
@@ -398,7 +440,7 @@ export default function Footprints() {
           </div>
         )}
 
-        {/* POAP Gallery */}
+        {/* POAP Gallery - UPDATED WITH DYNAMIC BACKGROUNDS */}
         {walletAddress && userPoaps.length > 0 && (
           <div className="mt-12">
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -410,42 +452,61 @@ export default function Footprints() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userPoaps.map((poap, index) => (
-                <div 
-                  key={index} 
-                  className="bg-[url('/card.svg')] bg-cover bg-center p-6 rounded-md border-2 border-[#8B4513] hover:shadow-xl transition-all relative overflow-hidden"
-                >
-                  <h3 className="text-lg font-bold mb-4 text-[#6D3B00] font-serif">{poap.title}</h3>
-                  <div className="space-y-2 mb-4">
-                    <p className="text-sm text-[#5E4B32] flex items-start font-serif">
-                      <span className="font-mono text-xs bg-[#211510] text-[#E6C887] rounded px-2 py-1 mr-2 flex-shrink-0">LAT</span>
-                      <span className="text-[#6D3B00]">{poap.latitude.substring(0, 8)}</span>
-                    </p>
-                    <p className="text-sm text-[#5E4B32] flex items-start font-serif">
-                      <span className="font-mono text-xs bg-[#211510] text-[#E6C887] rounded px-2 py-1 mr-2 flex-shrink-0">LNG</span>
-                      <span className="text-[#6D3B00]">{poap.longitude.substring(0, 8)}</span>
-                    </p>
+              {userPoaps.map((poap, index) => {
+                // Get background image for this location
+                const bgImage = imageErrors[index] 
+                  ? "/card.svg" 
+                  : getBackgroundImage(poap.title);
+                
+                return (
+                  <div 
+                    key={index} 
+                    style={{
+                      backgroundImage: `url(${bgImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                    className="relative p-6 rounded-md border-2 border-[#8B4513] hover:shadow-xl transition-all overflow-hidden"
+                  >
+                    {/* Semi-transparent overlay for better text readability */}
+                   <div className="absolute inset-0 bg-gradient-to-t from-[#FBF6E9]/60 via-[#FBF6E9]/0 to-transparent"></div>
+
+                    
+                    {/* Card content with relative positioning */}
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-bold mb-4 text-[#6D3B00] font-serif">{poap.title}</h3>
+                      <div className="space-y-2 mb-4">
+                        <p className="text-sm text-[#5E4B32] flex items-start font-serif">
+                          <span className="font-mono text-xs bg-[#211510] text-[#E6C887] rounded px-2 py-1 mr-2 flex-shrink-0">LAT</span>
+                          <span className="text-[#6D3B00]">{poap.latitude.substring(0, 8)}</span>
+                        </p>
+                        <p className="text-sm text-[#5E4B32] flex items-start font-serif">
+                          <span className="font-mono text-xs bg-[#211510] text-[#E6C887] rounded px-2 py-1 mr-2 flex-shrink-0">LNG</span>
+                          <span className="text-[#6D3B00]">{poap.longitude.substring(0, 8)}</span>
+                        </p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <a
+                          href={`https://ipfs.io/ipfs/${poap.ipfs}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#8B4513] hover:text-[#6D3B00] text-sm flex items-center transition-colors font-serif"
+                        >
+                          View Treasure
+                          <Share2 className="h-3 w-3 ml-1" />
+                        </a>
+                        <span className="text-xs text-[#5E4B32] font-serif">#{index + 1}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Decorative corner elements */}
+                    <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#8B4513]/50 z-10"></div>
+                    <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#8B4513]/50 z-10"></div>
+                    <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#8B4513]/50 z-10"></div>
+                    <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#8B4513]/50 z-10"></div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <a
-                      href={`https://ipfs.io/ipfs/${poap.ipfs}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#8B4513] hover:text-[#6D3B00] text-sm flex items-center transition-colors font-serif"
-                    >
-                      View Treasure
-                      <Share2 className="h-3 w-3 ml-1" />
-                    </a>
-                    <span className="text-xs text-[#5E4B32] font-serif">#{index + 1}</span>
-                  </div>
-                  
-                  {/* Decorative corner elements */}
-                  <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-[#8B4513]/50"></div>
-                  <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-[#8B4513]/50"></div>
-                  <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-[#8B4513]/50"></div>
-                  <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-[#8B4513]/50"></div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
