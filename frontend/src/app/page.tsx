@@ -173,20 +173,20 @@ export default function Home() {
                   Hunt for real-world treasures, capture proof of your discoveries, and earn exclusive on-chain rewards with privacy-preserving verification.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                  <button 
-                    onClick={startGameWithIntro}
-                    className="px-6 py-3 bg-[#6D3B00] text-amber-100 rounded-md font-bold hover:bg-[#8B4513] transition-colors shadow-lg"
-                  >
-                    Launch Game
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  onClick={startGameWithIntro}
+                  className="px-6 py-3 ml-6 bg-[#6D3B00] text-amber-100 rounded-md font-bold hover:bg-[#8B4513] transition-colors shadow-lg w-full sm:w-40"
+                >
+                  Launch Game
+                </button>
+                
+                <Link href="/footprints">
+                  <button className="px-6 py-3 ml-6 bg-[#211510] text-amber-100 rounded-md font-bold hover:bg-[#372213] transition-colors shadow-lg w-full sm:w-40">
+                    Watch Footprints
                   </button>
-                  
-                  <Link href="/footprints">
-                    <button className="px-6 py-3 bg-[#211510] text-amber-100 rounded-md font-bold hover:bg-[#372213] transition-colors shadow-lg">
-                      Watch Footprints
-                    </button>
-                  </Link>
-                </div>
+                </Link>
+              </div>
               </div>
             </div>
           </div>
@@ -388,7 +388,7 @@ export default function Home() {
 
               {/* Footer */}
               <footer className="text-center text-[#5E4B32] text-sm pt-8 pb-16 font-[ElMessiri]">
-                <p>© 2025 Treasure Quest · Powered by Zero-Knowledge Proofs on Base</p>
+                <p>© 2025 EUREKA · Powered by Zero-Knowledge Proofs on Base</p>
               </footer>
             </div>
           </div>
