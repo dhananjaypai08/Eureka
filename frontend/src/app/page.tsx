@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ethers } from "ethers";
 import { LocationRequest } from "./components/LocationRequest";
 import Image from "next/image";
@@ -20,26 +20,57 @@ interface LeaderboardEntry {
 }
 
 export default function Home() {
+  // Assets loaded state
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [showContent, setShowContent] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   // Leaderboard state
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
-  // Loading effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-      setTimeout(() => {
-        setShowContent(true);
-      }, 100);
-    }, 1200);
+  // Assets to preload
+  const criticalAssets = [
+    '/map-bg.svg',
+    '/home_bg.svg',
+    '/compass.svg',
+    '/map-paper.svg',
+    '/clue-stone.svg',
+    '/Group_Divider.png',
+    '/Group_Divider_left.png',
+    '/png_clipart_buried_treasure.svg'
+  ];
+  
+  const assetRefs = useRef<{[key: string]: boolean}>({});
 
-    return () => clearTimeout(timer);
+  // Load critical assets and then show content
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const loadAsset = (src: string) => {
+      return new Promise((resolve) => {
+        const img = new window.Image();
+        img.onload = () => {
+          assetRefs.current[src] = true;
+          resolve(true);
+        };
+        img.onerror = () => {
+          console.error(`Failed to load asset: ${src}`);
+          resolve(false);
+        };
+        img.src = src;
+      });
+    };
+
+    const loadAllAssets = async () => {
+      const loadPromises = criticalAssets.map(src => loadAsset(src));
+      await Promise.all(loadPromises);
+      setAssetsLoaded(true);
+    };
+
+    loadAllAssets();
   }, []);
 
   // Initialize contract and load leaderboard data
@@ -71,30 +102,36 @@ export default function Home() {
       }
     };
 
-    if (!loading && showContent) {
+    if (assetsLoaded) {
       loadLeaderboardData();
     }
-  }, [loading, showContent]);
+  }, [assetsLoaded]);
 
+  // Direct transition to LocationRequest with minimal delay
   const startGameWithIntro = () => {
+    setIsRedirecting(true);
+    // Very brief intro animation (500ms) before redirecting
     setShowIntro(true);
     setTimeout(() => {
       setShowIntro(false);
-      setTimeout(() => {
-        setGameStarted(true);
-      }, 500);
-    }, 2000);
+      setGameStarted(true);
+    }, 500);
   };
 
-  // Loading screen
-  if (loading || !showContent) {
+  // Loading screen - now waits for assets
+  if (!assetsLoaded) {
     return (
       <div className="min-h-screen bg-[#211510] flex items-center justify-center">
         <div className="text-center">
           <div className="relative w-28 h-28 mx-auto mb-8">
             <div className="absolute w-full h-full rounded-full border-4 border-t-amber-600 border-r-amber-800 border-b-amber-900 border-l-transparent animate-spin"></div>
             <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-              <Image src="/compass.svg" alt="Compass" width={40} height={40} className="animate-pulse" priority={true} loading="eager" />
+              <div className="w-10 h-10 text-amber-600 animate-pulse">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
           </div>
           <h2 className="text-3xl font-bold text-amber-600 animate-pulse font-[ElMessiri]">
@@ -105,7 +142,7 @@ export default function Home() {
     );
   }
 
-  // Intro animation screen
+  // Intro animation screen - now shorter and with better mobile view
   if (showIntro) {
     return (
       <div className="min-h-screen bg-[#211510] flex items-center justify-center overflow-hidden relative">
@@ -117,24 +154,27 @@ export default function Home() {
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${1 + Math.random() * 3}s`
+                animationDelay: `${Math.random() * 0.5}s`,
+                animationDuration: `${0.5 + Math.random() * 1}s`
               }}
             ></div>
           ))}
         </div>
       
         <div className="text-center relative z-10">
-          <div className="mb-8 scale-150 animate-pulse">
-            <Image src="/compass.svg" alt="Compass" width={96} height={96} priority={true} loading="eager" />
+          <div className="mb-4 scale-150 animate-pulse">
+            <Image 
+              src="/compass.svg" 
+              alt="Compass" 
+              width={96} 
+              height={96} 
+              priority 
+            />
           </div>
-          <div className="space-y-3">
-            <h2 className="text-4xl font-bold text-amber-200 mb-4 animate-pulse font-[ElMessiri]">
+          <div className="space-y-2">
+            <h2 className="text-4xl font-bold text-amber-200 animate-pulse font-[ElMessiri]">
               ADVENTURE AWAITS
             </h2>
-            <div className="text-xl text-amber-400 font-[ElMessiri] animate-typewriter overflow-hidden whitespace-nowrap border-r-4 border-amber-400 pr-1 inline-block">
-              PLOTTING YOUR JOURNEY...
-            </div>
           </div>
         </div>
       </div>
@@ -143,111 +183,115 @@ export default function Home() {
 
   // Main content
   return (
-    <div className="min-h-screen bg-cover bg-center font-[ElMessiri]" style={{ backgroundImage: "url('/map-bg.svg')" }}>
+    <div className="min-h-screen bg-cover bg-center font-[ElMessiri]" 
+         style={{ backgroundImage: "url('/map-bg.svg')" }}>
       {!gameStarted ? (
         <div className="flex flex-col items-center min-h-screen py-8 px-4 text-center relative">
           {/* Hero Section - Full width background image */}
-          <div className="w-full h-screen relative mb-16">
+          <div className="w-full h-screen sm:h-screen relative mb-8 sm:mb-16">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
-              <Image 
-                src="/home_bg.svg" 
-                alt="Treasure Hunter Background" 
-                layout="fill"
-                objectFit="cover"
-                quality={100}
-                priority={true}
-                loading="eager"
-              />
+              <div className="relative w-full h-full">
+                <Image 
+                  src="/home_bg.svg" 
+                  alt="Treasure Hunter Background" 
+                  fill
+                  style={{ objectFit: "cover" }}
+                  quality={90}
+                  priority
+                />
+              </div>
             </div>
             
             {/* Content overlay */}
-            <div className="relative z-10 flex flex-col items-end justify-center h-full pr-16 max-w-6xl mx-auto">
-              <div className="md:w-1/2 text-right">
-                <h1 className="font-[ElMessiri] text-5xl sm:text-6xl font-bold mb-4 text-[#6D3B00]">
+            <div className="relative z-10 flex flex-col items-center sm:items-end justify-center h-full px-4 sm:pr-16 max-w-6xl mx-auto">
+              <div className="w-full sm:w-1/2 text-center sm:text-right bg-[#211510]/40 sm:bg-transparent p-6 sm:p-0 rounded-lg sm:rounded-none">
+                <h1 className="font-[ElMessiri] text-4xl sm:text-6xl font-bold mb-4 text-[#D4BE94]">
                   <span className="block">Discover The</span>
-                  <span className="block text-[#8B4513]">Treasure Quest</span>
+                  <span className="block text-[#FFD700]">Treasure Quest</span>
                 </h1>
                 
-                <p className="text-lg text-[#5E4B32] max-w-xl mb-8 font-[ElMessiri] ml-auto">
+                <p className="text-base sm:text-lg text-[#D4BE94] max-w-xl mb-8 font-[ElMessiri] mx-auto sm:ml-auto">
                   Hunt for real-world treasures, capture proof of your discoveries, and earn exclusive on-chain rewards with privacy-preserving verification.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button 
-                  onClick={startGameWithIntro}
-                  className="px-6 py-3 ml-6 bg-[#6D3B00] text-amber-100 rounded-md font-bold hover:bg-[#8B4513] transition-colors shadow-lg w-full sm:w-40"
-                >
-                  Launch Game
-                </button>
-                
-                <Link href="/footprints">
-                  <button className="px-6 py-3 ml-6 bg-[#211510] text-amber-100 rounded-md font-bold hover:bg-[#372213] transition-colors shadow-lg w-full sm:w-40">
-                    Watch Footprints
+                <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-end">
+                  <button 
+                    onClick={startGameWithIntro}
+                    disabled={isRedirecting}
+                    className={`px-6 py-3 bg-[#6D3B00] text-amber-100 rounded-md font-bold hover:bg-[#8B4513] transition-colors shadow-lg w-full sm:w-auto ${isRedirecting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  >
+                    {isRedirecting ? 'Starting...' : 'Launch Game'}
                   </button>
-                </Link>
-              </div>
+                  
+                  <Link href="/footprints">
+                    <button className="px-6 py-3 bg-[#211510] text-amber-100 rounded-md font-bold hover:bg-[#372213] transition-colors shadow-lg w-full sm:w-auto">
+                      Watch Footprints
+                    </button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Feature Scrolls Section */}
-          <div className="w-full max-w-6xl mx-auto mb-16">
-            <div className="grid grid-row-1 md:grid-row-3 gap-8">
-              {/* Capture & Collect Scroll */}
-              <div className="relative left-[-250px]">
+          {/* Feature Scrolls Section - Optimized for mobile */}
+          <div className="w-full max-w-6xl mx-auto mb-8 sm:mb-16 px-4">
+            <h2 className="text-2xl font-bold text-[#6D3B00] mb-6 text-center">Key Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Capture & Collect */}
+              <div className="relative">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
                     alt="Scroll background"
-                    layout="fill"
-                    objectFit="contain"
-                    priority={true}
-                    loading="eager"
+                    width={300}
+                    height={200}
+                    style={{ objectFit: "contain", width: "100%", height: "100%" }}
+                    priority
                   />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 sm:px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Capture & Collect</h3>
-                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[160px]">
+                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[200px]">
                       Take photos at discovery locations to mint exclusive Location POAPs that prove your adventures on-chain.
                     </p>
                   </div>
                 </div>
               </div>
               
-              {/* Privacy Shield Scroll */}
-              <div className="relative left-[170px]">
+              {/* Privacy Shield */}
+              <div className="relative">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
                     alt="Scroll background" 
-                    layout="fill"
-                    objectFit="contain"
-                    priority={true}
-                    loading="eager"
+                    width={300}
+                    height={200}
+                    style={{ objectFit: "contain", width: "100%", height: "100%" }}
+                    priority
                   />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 sm:px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Privacy Shield</h3>
-                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[160px]">
+                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[200px]">
                       Our zero-knowledge proofs verify your location without revealing your coordinates, keeping your movements private.
                     </p>
                   </div>
                 </div>
               </div>
               
-              {/* Real Crypto Rewards Scroll */}
-              <div className="relative left-[-250px]">
+              {/* Real Crypto Rewards */}
+              <div className="relative">
                 <div className="relative w-full h-64">
                   <Image 
                     src="/map-compass.svg" 
                     alt="Scroll background" 
-                    layout="fill"
-                    objectFit="contain"
-                    priority={true}
-                    loading="eager"
+                    width={300}
+                    height={200}
+                    style={{ objectFit: "contain", width: "100%", height: "100%" }}
+                    priority
                   />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 sm:px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Real Crypto Rewards</h3>
-                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[160px]">
+                    <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[200px]">
                       Earn ETH and exclusive digital collectibles on Base for each quest you complete - tradable and valuable.
                     </p>
                   </div>
@@ -262,7 +306,7 @@ export default function Home() {
             <div className="absolute inset-0 w-full h-full bg-center bg-cover bg-no-repeat" 
               style={{ 
                 backgroundImage: "url('/map-paper.svg')",
-                backgroundSize: "500% 500%",
+                backgroundSize: "cover",
                 backgroundPosition: "center",
                 minHeight: "800px"
               }}>
@@ -274,32 +318,30 @@ export default function Home() {
               <div className="mb-16">
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2 mb-8 w-full justify-center">
-                    <div className="relative h-8 w-48">
+                    <div className="relative h-8 w-20 sm:w-48">
                       <Image 
                         src="/Group_Divider_left.png" 
                         alt="Divider Left" 
-                        layout="fill"
-                        objectFit="contain"
-                        priority={true}
-                        loading="eager"
+                        width={192}
+                        height={32}
+                        priority
                       />
                     </div>
-                    <h2 className="text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Create Your Own Quests</h2>
-                    <div className="relative h-8 w-48">
+                    <h2 className="text-xl sm:text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Create Your Own Quests</h2>
+                    <div className="relative h-8 w-20 sm:w-48">
                       <Image 
                         src="/Group_Divider.png" 
                         alt="Divider Right" 
-                        layout="fill"
-                        objectFit="contain"
-                        priority={true}
-                        loading="eager"
+                        width={192}
+                        height={32}
+                        priority
                       />
                     </div>
                   </div>
                   
                   <div className="w-full max-w-xl mx-auto">
-                    <div className="bg-[#F8EFE0]/70 backdrop-blur-sm rounded-xl shadow-inner shadow-amber-900/20 p-8 border border-amber-800/10">
-                      <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center mb-8 max-w-lg mx-auto">
+                    <div className="bg-[#F8EFE0]/70 backdrop-blur-sm rounded-xl shadow-inner shadow-amber-900/20 p-6 sm:p-8 border border-amber-800/10">
+                      <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center mb-6 sm:mb-8 max-w-lg mx-auto">
                         Upload custom coordinates to create personalized treasure hunts for friends or communities. Set your own rewards and craft unique challenges based on your favorite locations.
                       </p>
                       
@@ -319,33 +361,31 @@ export default function Home() {
               <div className="mb-16">
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2 mb-8 w-full justify-center">
-                    <div className="relative h-8 w-48">
+                    <div className="relative h-8 w-20 sm:w-48">
                       <Image 
                         src="/Group_Divider_left.png" 
                         alt="Divider Left" 
-                        layout="fill"
-                        objectFit="contain"
-                        priority={true}
-                        loading="eager"
+                        width={192}
+                        height={32}
+                        priority
                       />
                     </div>
-                    <h2 className="text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Leaderboard</h2>
-                    <div className="relative h-8 w-48">
+                    <h2 className="text-xl sm:text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Leaderboard</h2>
+                    <div className="relative h-8 w-20 sm:w-48">
                       <Image 
                         src="/Group_Divider.png" 
                         alt="Divider Right" 
-                        layout="fill"
-                        objectFit="contain"
-                        priority={true}
-                        loading="eager"
+                        width={192}
+                        height={32}
+                        priority
                       />
                     </div>
                   </div>
                   
                   <div className="w-full max-w-2xl mx-auto bg-[#211510]/90 rounded-lg p-4 text-amber-100 shadow-xl border border-amber-900/30">
-                    <div className="grid grid-cols-12 text-sm border-b border-amber-800/50 py-3 px-4">
-                      <div className="col-span-1 font-bold">RANK</div>
-                      <div className="col-span-7 font-bold">PLAYER</div>
+                    <div className="grid grid-cols-12 text-sm border-b border-amber-800/50 py-3 px-2 sm:px-4">
+                      <div className="col-span-2 sm:col-span-1 font-bold">RANK</div>
+                      <div className="col-span-6 sm:col-span-7 font-bold">PLAYER</div>
                       <div className="col-span-4 font-bold text-right">REWARDS</div>
                     </div>
                     
@@ -367,15 +407,17 @@ export default function Home() {
                     ) : (
                       <>
                         {leaderboard.slice(0, 5).map((item, index) => (
-                          <div key={index} className={`grid grid-cols-12 py-3 px-4 border-b border-amber-800/20 hover:bg-amber-900/20 transition-colors ${index === 0 ? 'bg-amber-900/30' : index === 1 ? 'bg-amber-800/20' : index === 2 ? 'bg-amber-700/20' : ''}`}>
-                            <div className="col-span-1 font-bold text-amber-400">{index + 1}</div>
-                            <div className="col-span-7 font-medium flex items-center">
-                              <div className="w-7 h-7 rounded-full bg-amber-700 mr-3 flex items-center justify-center text-xs">
+                          <div key={index} className={`grid grid-cols-12 py-3 px-2 sm:px-4 border-b border-amber-800/20 hover:bg-amber-900/20 transition-colors ${index === 0 ? 'bg-amber-900/30' : index === 1 ? 'bg-amber-800/20' : index === 2 ? 'bg-amber-700/20' : ''}`}>
+                            <div className="col-span-2 sm:col-span-1 font-bold text-amber-400">{index + 1}</div>
+                            <div className="col-span-6 sm:col-span-7 font-medium flex items-center text-xs sm:text-sm">
+                              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-amber-700 mr-2 sm:mr-3 flex items-center justify-center text-xs">
                                 {item.user.substring(0, 2)}
                               </div>
-                              {`${item.user.slice(0, 6)}...${item.user.slice(-4)}`}
+                              <span className="truncate">
+                                {`${item.user.slice(0, 4)}...${item.user.slice(-4)}`}
+                              </span>
                             </div>
-                            <div className="col-span-4 text-right self-center text-amber-400">
+                            <div className="col-span-4 text-right self-center text-amber-400 text-xs sm:text-sm">
                               {(Number(item.poaps.toString()) * 0.01).toFixed(2)} ETH
                             </div>
                           </div>
@@ -394,9 +436,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-center min-h-screen p-4 pt-16">
-          <LocationRequest />
-        </div>
+        <LocationRequest />
       )}
       
       {/* Custom animations */}

@@ -24,6 +24,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<'welcome' | 'map' | 'clue' | 'reward' | 'final-reward'>('welcome');
   const [confettiActive, setConfettiActive] = useState<boolean>(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -50,6 +51,43 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [manualWalletAddress, setManualWalletAddress] = useState("");
   const [isValidAddress, setIsValidAddress] = useState(false);
   const [showAddressInput, setShowAddressInput] = useState(true);
+
+  // Assets to preload
+  const assetList = [
+    '/map-bg.svg',
+    '/compass.svg',
+    '/Button.png',
+    '/clue-stone.svg',
+    '/map-paper.svg',
+    '/Start_Button.png',
+    '/Verify_Button.png',
+    '/png_clipart_buried_treasure.svg'
+  ];
+  
+  // Preload assets to prevent slow loading
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const loadAsset = (src: string): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const img = new window.Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => {
+          console.error(`Failed to load asset: ${src}`);
+          resolve(false);
+        };
+        img.src = src;
+      });
+    };
+    
+    const loadAllAssets = async () => {
+      const loadPromises = assetList.map(src => loadAsset(src));
+      await Promise.all(loadPromises);
+      setAssetsLoaded(true);
+    };
+    
+    loadAllAssets();
+  }, []);
 
   // Validate Ethereum address format
   const validateEthAddress = (address: string) => {
@@ -78,6 +116,8 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
 
   // Load places from places.json and select random ones for this game
   useEffect(() => {
+    if (!assetsLoaded) return; // Only proceed if assets are loaded
+    
     const fetchPlaces = async () => {
       try {
         setLoading(true);
@@ -141,7 +181,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     };
 
     fetchPlaces();
-  }, [initialUserLocation]);
+  }, [initialUserLocation, assetsLoaded]);
 
   // Helper function to shuffle array
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -361,14 +401,38 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     }, 5000);
   };
 
-  // Loading state
+  // Loading state while waiting for assets and data
+  if (!assetsLoaded) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#211510]">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute w-full h-full rounded-full border-4 border-t-amber-600 border-r-amber-800 border-b-amber-900 border-l-transparent animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-10 h-10 text-amber-600 animate-pulse">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-amber-600 animate-pulse font-serif">
+            Preparing Your Adventure...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state for place data
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[url('/map-bg.svg')] bg-cover bg-center">
         <div className="relative w-20 h-20 mb-6">
           <div className="absolute w-full h-full rounded-full border-4 border-t-[#6D3B00] border-r-[#6D3B00] border-b-[#6D3B00] border-l-transparent animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Image src="/compass.svg" alt="Compass" width={32} height={32} />
+            <Image src="/compass.svg" alt="Compass" width={32} height={32} priority />
           </div>
         </div>
         <p className="text-lg text-[#6D3B00] font-serif">Charting the adventure...</p>
@@ -383,7 +447,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         <div className="max-w-md w-full p-8 bg-[url('/map-paper.svg')] bg-cover bg-center rounded-lg shadow-xl">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
-              <Image src="/compass.svg" alt="Compass" width={40} height={40} className="opacity-50" />
+              <Image src="/compass.svg" alt="Compass" width={40} height={40} className="opacity-50" priority />
             </div>
             <h3 className="text-xl font-serif font-bold text-[#6D3B00] mb-2">Navigation Error</h3>
             <p className="text-[#8B4513] mb-6 font-serif">{error}</p>
@@ -419,7 +483,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
             <div className="flex justify-center mb-8">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-[#2C1206] flex items-center justify-center overflow-hidden border-2 border-[#8B4513]">
-                  <Image src="/compass.svg" alt="Compass" width={60} height={60} />
+                  <Image src="/compass.svg" alt="Compass" width={60} height={60} priority />
                 </div>
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-32">
                   <div className="w-full py-1 bg-[#2C1206] text-[#D4BE94] font-bold text-center rounded-b-lg border-2 border-t-0 border-[#8B4513]">
@@ -452,6 +516,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                   alt="Start Game"
                   width={180}
                   height={60}
+                  priority
                 />
               </button>
             </div>
@@ -467,70 +532,95 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       <div className="flex flex-col items-center justify-center min-h-screen bg-[url('/map-bg.svg')] bg-cover bg-center">
         <div className="max-w-md w-full relative">
           <div className="w-full min-h-[600px] bg-[url('/map-paper.svg')] bg-cover bg-center p-6 rounded-lg">
-            {/* Map nodes */}
-            <div className="relative h-[500px]">
-              {/* Top navigation elements */}
-              <div className="flex justify-center gap-4 mb-8">
-                {[...Array(3)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-10 h-10 rounded-full bg-[#211510] border ${i <= currentPlaceIndex ? 'border-[#D4BE94]' : 'border-[#211510]/50'} flex items-center justify-center`}
-                  >
-                    {i < currentPlaceIndex && (
-                      <span className="text-[#D4BE94] text-xs">✓</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Map guidance text - NEW! */}
+            <div className="text-center mb-6">
+              <p className="text-[#6D3B00] font-serif text-lg font-bold">Find The Hidden Locations</p>
+              <p className="text-[#8B4513] font-serif text-sm">Tap on the glowing stone to view your current clue</p>
+            </div>
+            
+            {/* Top navigation elements */}
+            <div className="flex justify-center gap-4 mb-8">
+              {[...Array(places.length)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-10 h-10 rounded-full bg-[#211510] border ${i <= currentPlaceIndex ? 'border-[#D4BE94]' : 'border-[#211510]/50'} flex items-center justify-center`}
+                >
+                  {i < currentPlaceIndex && (
+                    <span className="text-[#D4BE94] text-xs">✓</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Map nodes with connections */}
+            <div className="relative h-[350px]">
+              {/* Node connections - dotted lines */}
+              <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <line x1="150" y1="80" x2="250" y2="150" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
+                <line x1="250" y1="150" x2="150" y2="220" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
+                <line x1="150" y1="220" x2="250" y2="290" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
+              </svg>
               
-              {/* Map nodes with connections */}
-              <div className="relative h-[350px]">
-                {/* Node connections - dotted lines */}
-                <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                  <line x1="150" y1="80" x2="250" y2="150" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
-                  <line x1="250" y1="150" x2="150" y2="220" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
-                  <line x1="150" y1="220" x2="250" y2="290" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
-                </svg>
-                
-                {/* Map nodes */}
-                {[
-                  { top: 60, left: 150, completed: currentPlaceIndex > 0 },
-                  { top: 150, left: 250, completed: currentPlaceIndex > 1, active: currentPlaceIndex === 1 },
-                  { top: 220, left: 150, completed: currentPlaceIndex > 2, active: currentPlaceIndex === 2 },
-                  { top: 290, left: 250, active: currentPlaceIndex === 3 }
-                ].map((node, i) => (
-                  <div 
-                    key={i}
-                    className={`absolute w-14 h-14 rounded-full flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 ${
-                      i === currentPlaceIndex ? 'bg-[#6D3B00] border-2 border-[#D4BE94] cursor-pointer' : 
-                      i < currentPlaceIndex ? 'bg-[#211510] border-2 border-[#D4BE94]' : 
-                      'bg-[#211510]/50 border-2 border-[#211510]/30'
-                    }`}
-                    style={{ top: node.top, left: node.left }}
-                    onClick={i === currentPlaceIndex ? handleClueSelection : undefined}
-                  >
-                    <Image src="/compass.svg" alt="Compass" width={24} height={24} className={i < currentPlaceIndex ? 'opacity-70' : 'opacity-100'} />
+              {/* Map nodes - REPLACED with clue stones */}
+              {[
+                { top: 60, left: 150, completed: currentPlaceIndex > 0 },
+                { top: 150, left: 250, completed: currentPlaceIndex > 1, active: currentPlaceIndex === 1 },
+                { top: 220, left: 150, completed: currentPlaceIndex > 2, active: currentPlaceIndex === 2 },
+                { top: 290, left: 250, active: currentPlaceIndex === 3 }
+              ].map((node, i) => (
+                <div 
+                  key={i}
+                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 hover:scale-110 ${
+                    i < currentPlaceIndex ? 'opacity-70' : 
+                    i === currentPlaceIndex ? 'animate-pulse' : 
+                    'opacity-40'
+                  }`}
+                  style={{ top: node.top, left: node.left }}
+                  onClick={i === currentPlaceIndex ? handleClueSelection : undefined}
+                >
+                  <div className="relative w-24 h-24">
+                    <Image 
+                      src="/clue-stone.svg" 
+                      alt={`Clue ${i+1}`} 
+                      width={96}
+                      height={96}
+                      priority
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center text-[#D4BE94] font-bold text-lg">
+                      {i < currentPlaceIndex ? (
+                        <CheckCircle className="w-6 h-6" />
+                      ) : (
+                        i + 1
+                      )}
+                    </div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Map legend/chest icon */}
-              <div className="absolute bottom-0 right-0">
-                <Image src="/png_clipart_buried_treasure.svg" alt="Treasure" width={60} height={60} />
-              </div>
+                  
+                  {/* Status indicator */}
+                  {i === currentPlaceIndex && (
+                    <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-[#6D3B00] text-[#D4BE94] text-xs py-1 px-3 rounded-full whitespace-nowrap font-serif">
+                      Current Clue
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Map legend/chest icon */}
+            <div className="absolute bottom-0 right-0">
+              <Image src="/png_clipart_buried_treasure.svg" alt="Treasure" width={60} height={60} priority />
             </div>
             
             {/* Footer with user profile and points */}
-            <div className="flex items-center justify-between bg-[#2C1206] rounded-lg p-2 px-4 border border-[#8B4513]">
+            <div className="flex items-center justify-between bg-[#2C1206] rounded-lg p-2 px-4 border border-[#8B4513] mt-6">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-[#211510] border border-[#D4BE94] flex items-center justify-center overflow-hidden">
-                  <Image src="/compass.svg" alt="User" width={20} height={20} />
+                  <Image src="/compass.svg" alt="User" width={20} height={20} priority />
                 </div>
-                <span className="text-[#D4BE94] font-bold">{walletAddress.slice(0, 8)}</span>
+                <span className="text-[#D4BE94] font-bold truncate max-w-[100px]">{walletAddress.slice(0, 8)}</span>
               </div>
               <div className="flex items-center gap-2 bg-[#211510] px-3 py-1 rounded-full border border-[#8B4513]">
-                <span className="text-[#D4BE94] font-bold">Decode Quests</span>
-                <Image src="/compass.svg" alt="Points" width={16} height={16} />
+                <span className="text-[#D4BE94] font-bold">Decoded: {completedPlaces.length}/{places.length}</span>
+                <Image src="/compass.svg" alt="Points" width={16} height={16} priority />
               </div>
             </div>
           </div>
@@ -557,7 +647,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         <div className="max-w-md w-full relative">
           {/* Clue stone at the top */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-            <Image src="/clue-stone.svg" alt="Clue Stone" width={120} height={40} />
+            <Image src="/clue-stone.svg" alt="Clue Stone" width={120} height={40} priority />
           </div>
           
           {/* Clue paper */}
@@ -566,7 +656,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
             <div className="bg-[#2C1206] border-4 border-[#D4BE94] rounded-lg p-4 text-[#D4BE94] mb-6">
               <div className="flex items-center justify-between border-b border-[#D4BE94]/30 pb-2 mb-4">
                 <div className="flex items-center gap-2">
-                  <Image src="/compass.svg" alt="Clue" width={20} height={20} />
+                  <Image src="/compass.svg" alt="Clue" width={20} height={20} priority />
                   <h3 className="font-bold font-serif text-lg">Clue {currentPlaceIndex + 1}</h3>
                 </div>
                 <div className="flex space-x-1">
@@ -589,7 +679,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-[#D4BE94] font-bold">HINT</span>
                     </div>
-                    <p className="text-sm font-serif">Current distance: {Math.round(distances[currentPlace.id])}m. Get closer to verify your discovery and earn rewards!</p>
+                    <p className="text-sm font-serif">Current distance: {Math.round(distances[currentPlace.id])}m. Need to be within {currentPlace.thresholdDistance}m of the location.</p>
                   </div>
                 </div>
               </div>
@@ -697,6 +787,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                       alt="Verify Location" 
                       width={180} 
                       height={60} 
+                      priority
                     />
                   )}
                 </button>
@@ -735,13 +826,13 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
               </div>
             </div>
             
-            {/* Quit Hunt button - More visible */}
+            {/* Return to map button */}
             <div className="mt-6 text-center">
               <button
-                onClick={() => window.location.href = "/"}
+                onClick={() => setActiveView('map')}
                 className="px-4 py-2 bg-[#2C1206] text-[#D4BE94] rounded-lg hover:bg-[#8B4513] border border-[#8B4513] transition-colors flex items-center justify-center mx-auto"
               >
-                <Home className="h-4 w-4 mr-2" />
+                <MapPin className="h-4 w-4 mr-2" />
                 Return to Map
               </button>
             </div>
@@ -764,6 +855,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 width={150} 
                 height={150} 
                 className="mx-auto" 
+                priority
               />
             </div>
             
@@ -833,7 +925,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         )}
         
         <div className="max-w-md w-full">
-          <div className="w-full bg-[url('/map-bg.svg')] bg-cover bg-center p-8 rounded-lg">
+          <div className="w-full bg-[url('/map-paper.svg')] bg-cover bg-center p-8 rounded-lg">
             {/* Completion Header */}
             <div className="text-center mb-8">
               <div className="w-20 h-20 mx-auto bg-[#2C1206] rounded-full border-2 border-[#D4BE94] flex items-center justify-center mb-4">
