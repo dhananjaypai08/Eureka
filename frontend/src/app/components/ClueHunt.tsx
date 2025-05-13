@@ -104,7 +104,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   // Handle manual claim when user enters a wallet address
   const handleManualClaim = () => {
     if (isValidAddress) {
-      console.log(manualWalletAddress)
+      console.log(manualWalletAddress);
       setWalletAddress(manualWalletAddress);
       setShowAddressInput(false);
       // Trigger claim after setting address
@@ -337,7 +337,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       console.log(walletAddress);
       console.log(ImageUserMintData, ImageUserMintData.length);
       for(let i = 0; i< ImageUserMintData.length; i++){
-        console.log(ImageUserMintData)
+        console.log(ImageUserMintData);
         const mintResult = await mintNFT(
           walletAddress,
           ImageUserMintData[i].ipfs_url,
@@ -561,12 +561,11 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 <line x1="150" y1="220" x2="250" y2="290" stroke="#211510" strokeWidth="2" strokeDasharray="5,5" />
               </svg>
               
-              {/* Map nodes - REPLACED with clue stones */}
+              {/* First 3 Map nodes as clue stones */}
               {[
                 { top: 60, left: 150, completed: currentPlaceIndex > 0 },
                 { top: 150, left: 250, completed: currentPlaceIndex > 1, active: currentPlaceIndex === 1 },
                 { top: 220, left: 150, completed: currentPlaceIndex > 2, active: currentPlaceIndex === 2 },
-                { top: 290, left: 250, active: currentPlaceIndex === 3 }
               ].map((node, i) => (
                 <div 
                   key={i}
@@ -603,11 +602,34 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                   )}
                 </div>
               ))}
-            </div>
-            
-            {/* Map legend/chest icon */}
-            <div className="absolute bottom-0 right-0">
-              <Image src="/png_clipart_buried_treasure.svg" alt="Treasure" width={60} height={60} priority />
+              
+              {/* Treasure chest as the final destination */}
+              <div 
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 hover:scale-110 ${
+                  currentPlaceIndex === 3 ? 'animate-pulse' : 
+                  currentPlaceIndex > 3 ? 'opacity-70' : 
+                  'opacity-40'
+                }`}
+                style={{ top: 290, left: 250 }}
+                onClick={currentPlaceIndex === 3 ? handleClueSelection : undefined}
+              >
+                <div className="relative w-28 h-28">
+                  <Image 
+                    src="/png_clipart_buried_treasure.svg" 
+                    alt="Final Treasure"
+                    width={112}
+                    height={112}
+                    priority
+                  />
+                </div>
+                
+                {/* Status indicator for treasure */}
+                {currentPlaceIndex === 3 && (
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-[#6D3B00] text-[#D4BE94] text-xs py-1 px-3 rounded-full whitespace-nowrap font-serif">
+                    Final Treasure
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Footer with user profile and points */}

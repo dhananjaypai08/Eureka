@@ -206,12 +206,12 @@ export default function Home() {
             {/* Content overlay */}
             <div className="relative z-10 flex flex-col items-center sm:items-end justify-center h-full px-4 sm:pr-16 max-w-6xl mx-auto">
               <div className="w-full sm:w-1/2 text-center sm:text-right bg-[#211510]/40 sm:bg-transparent p-6 sm:p-0 rounded-lg sm:rounded-none">
-                <h1 className="font-[ElMessiri] text-4xl sm:text-6xl font-bold mb-4 text-[#D4BE94]">
+                <h1 className="font-[ElMessiri] text-4xl sm:text-6xl font-bold mb-4 text-[#6D3B00]">
                   <span className="block">Discover The</span>
-                  <span className="block text-[#FFD700]">Treasure Quest</span>
+                  <span className="block text-[#8B4513]">Treasure Quest</span>
                 </h1>
                 
-                <p className="text-base sm:text-lg text-[#D4BE94] max-w-xl mb-8 font-[ElMessiri] mx-auto sm:ml-auto">
+                <p className="text-base sm:text-lg text-[#5E4B32] max-w-xl mb-8 font-[ElMessiri] mx-auto sm:ml-auto">
                   Hunt for real-world treasures, capture proof of your discoveries, and earn exclusive on-chain rewards with privacy-preserving verification.
                 </p>
                 
