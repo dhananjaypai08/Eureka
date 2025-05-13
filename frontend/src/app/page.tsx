@@ -94,7 +94,7 @@ export default function Home() {
           <div className="relative w-28 h-28 mx-auto mb-8">
             <div className="absolute w-full h-full rounded-full border-4 border-t-amber-600 border-r-amber-800 border-b-amber-900 border-l-transparent animate-spin"></div>
             <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-              <Image src="/compass.svg" alt="Compass" width={40} height={40} className="animate-pulse" />
+              <Image src="/compass.svg" alt="Compass" width={40} height={40} className="animate-pulse" priority={true} loading="eager" />
             </div>
           </div>
           <h2 className="text-3xl font-bold text-amber-600 animate-pulse font-[ElMessiri]">
@@ -126,7 +126,7 @@ export default function Home() {
       
         <div className="text-center relative z-10">
           <div className="mb-8 scale-150 animate-pulse">
-            <Image src="/compass.svg" alt="Compass" width={96} height={96} />
+            <Image src="/compass.svg" alt="Compass" width={96} height={96} priority={true} loading="eager" />
           </div>
           <div className="space-y-3">
             <h2 className="text-4xl font-bold text-amber-200 mb-4 animate-pulse font-[ElMessiri]">
@@ -156,7 +156,8 @@ export default function Home() {
                 layout="fill"
                 objectFit="cover"
                 quality={100}
-                priority
+                priority={true}
+                loading="eager"
               />
             </div>
             
@@ -201,6 +202,8 @@ export default function Home() {
                     alt="Scroll background" 
                     layout="fill"
                     objectFit="contain"
+                    priority={true}
+                    loading="eager"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Capture & Collect</h3>
@@ -219,6 +222,8 @@ export default function Home() {
                     alt="Scroll background" 
                     layout="fill"
                     objectFit="contain"
+                    priority={true}
+                    loading="eager"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Privacy Shield</h3>
@@ -237,6 +242,8 @@ export default function Home() {
                     alt="Scroll background" 
                     layout="fill"
                     objectFit="contain"
+                    priority={true}
+                    loading="eager"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center px-20 py-8">
                     <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Real Crypto Rewards</h3>
@@ -273,6 +280,8 @@ export default function Home() {
                         alt="Divider Left" 
                         layout="fill"
                         objectFit="contain"
+                        priority={true}
+                        loading="eager"
                       />
                     </div>
                     <h2 className="text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Create Your Own Quests</h2>
@@ -282,6 +291,8 @@ export default function Home() {
                         alt="Divider Right" 
                         layout="fill"
                         objectFit="contain"
+                        priority={true}
+                        loading="eager"
                       />
                     </div>
                   </div>
@@ -314,6 +325,8 @@ export default function Home() {
                         alt="Divider Left" 
                         layout="fill"
                         objectFit="contain"
+                        priority={true}
+                        loading="eager"
                       />
                     </div>
                     <h2 className="text-2xl font-[ElMessiri] font-bold text-[#6D3B00] whitespace-nowrap">Leaderboard</h2>
@@ -323,6 +336,8 @@ export default function Home() {
                         alt="Divider Right" 
                         layout="fill"
                         objectFit="contain"
+                        priority={true}
+                        loading="eager"
                       />
                     </div>
                   </div>
