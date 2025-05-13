@@ -580,21 +580,14 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 <div className="col-span-5">
                   <div className="mb-4">
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[#D4BE94] font-bold">I</span>
+                      <span className="text-[#D4BE94] font-bold">THE CLUE</span>
                     </div>
                     <p className="text-sm font-serif">{currentPlace.clue}</p>
                   </div>
                   
-                  <div className="mb-4">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[#D4BE94] font-bold">II</span>
-                    </div>
-                    <p className="text-sm font-serif">Look for landmarks or distinctive features near {currentPlace.name}. The treasure is within {currentPlace.thresholdDistance}m radius.</p>
-                  </div>
-                  
                   <div>
                     <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[#D4BE94] font-bold">III</span>
+                      <span className="text-[#D4BE94] font-bold">HINT</span>
                     </div>
                     <p className="text-sm font-serif">Current distance: {Math.round(distances[currentPlace.id])}m. Get closer to verify your discovery and earn rewards!</p>
                   </div>
