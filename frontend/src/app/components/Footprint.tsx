@@ -200,7 +200,7 @@ export default function Footprints() {
       const locationCount = userPoaps.length;
       const latestLocation = userPoaps[userPoaps.length - 1].title;
       
-      const tweetText = `I've explored ${locationCount} unique locations on Treasure Quest! My latest discovery: ${latestLocation}. Join the adventure and earn rewards with privacy-preserving verification! #TreasureQuest #ZeroKnowledge`;
+      const tweetText = `I've explored ${locationCount} unique locations on EUREKA! My latest discovery: ${latestLocation}. Join the adventure and earn rewards with privacy-preserving verification! #Eureka`;
       
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
       window.open(twitterUrl, '_blank');
