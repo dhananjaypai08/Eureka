@@ -1,6 +1,10 @@
 {
   "Mumbai": "/images/cities/mumbai.jpg",
+  "Kalyan": "/images/cities/mumbai.jpg",
+  "Thane": "/images/cities/mumbai.jpg",
   "Dharamshala": "/images/cities/dharamshala.jpg",
+  "Himachal Pradesh": "/images/cities/dharamshala.jpg",
+  "McleodGanj": "/images/cities/dharamshala.jpg",
   "Delhi": "/images/cities/delhi.jpg",
   "Bangalore": "/images/cities/bangalore.jpg"
 }
