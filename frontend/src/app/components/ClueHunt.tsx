@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { calculateDistance, getCurrentLocation, detectCity } from "../utils/geoUtils";
+import { 
+  calculateDistance, 
+  getCurrentLocation, 
+  detectCity, 
+  clearLocationHistory,
+  verifyLocationConsistency,
+  startContinuousLocationMonitoring,
+  detectVPNorProxy
+} from "../utils/geoUtils";
 import { connectWallet, sendReward, uploadToIPFS, mintNFT } from "../utils/web3Utils";
-import { Camera, ArrowLeft, MapPin, Compass, Target, Award, CheckCircle, Trophy, Home } from "lucide-react";
+import { Camera, ArrowLeft, MapPin, Compass, Target, Award, CheckCircle, Trophy, Home, Shield, AlertTriangle } from "lucide-react";
 import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
 
 // Get the number of clues per game from environment variables
@@ -25,6 +33,14 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [activeView, setActiveView] = useState<'welcome' | 'map' | 'clue' | 'reward' | 'final-reward'>('welcome');
   const [confettiActive, setConfettiActive] = useState<boolean>(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+  // Anti-spoofing state
+  const [spoofingWarning, setSpoofingWarning] = useState<string>("");
+  const [isSpoofingDetected, setIsSpoofingDetected] = useState<boolean>(false);
+  const [consistencyCheckResult, setConsistencyCheckResult] = useState<{consistent: boolean, reason?: string}>({ consistent: true });
+  const [vpnDetected, setVpnDetected] = useState<boolean>(false);
+  const [spoofingAttempts, setSpoofingAttempts] = useState<number>(0);
+  const [lastNonSpoofedLocation, setLastNonSpoofedLocation] = useState<UserLocationMinimal | null>(null);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -63,6 +79,38 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     '/Verify_Button.png',
     '/png_clipart_buried_treasure.svg'
   ];
+  
+  // Clear location history when component mounts to start fresh
+  useEffect(() => {
+    clearLocationHistory();
+    
+    // Start continuous location monitoring to detect spoofing in real-time
+    const stopMonitoring = startContinuousLocationMonitoring((reason) => {
+      setSpoofingWarning(`Real-time detection: ${reason}`);
+      setIsSpoofingDetected(true);
+      setSpoofingAttempts(prev => prev + 1);
+      
+      // If too many spoofing attempts, can decide to end the game
+      if (spoofingAttempts > 5) {
+        setError("Too many suspicious location activities detected. Please restart the game.");
+        setGameCompleted(false);
+        setActiveView('welcome');
+      }
+    });
+    
+    // Run initial VPN detection
+    detectVPNorProxy().then(result => {
+      if (result.detected) {
+        setVpnDetected(true);
+        setSpoofingWarning(result.reason || "VPN or proxy usage detected");
+      }
+    });
+    
+    // Clean up when component unmounts
+    return () => {
+      stopMonitoring();
+    };
+  }, []);
   
   // Preload assets to prevent slow loading
   useEffect(() => {
@@ -199,15 +247,56 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const handleVerifyLocation = async () => {
     setVerifying(true);
     setLocationError("");
+    setSpoofingWarning("");
     setVerificationResult(null);
+    setIsSpoofingDetected(false);
+    
     try {
-      // Get the current user location when they click verify
-      const currentUserLocation = await getCurrentLocation();
-      setCurrentUserLocation(currentUserLocation);
-      // Calculate the distance between the current user location and the target place
+      // Reset spoofing indicators for this check
+      setConsistencyCheckResult({ consistent: true });
+      
+      // Get the current user location with anti-spoofing checks
+      const currentLocation = await getCurrentLocation();
+      
+      // Store the current location
+      setCurrentUserLocation({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude
+      });
+      
+      // Check for spoofing indicators in the location itself
+      if (currentLocation.spoofDetected) {
+        setSpoofingWarning(`Warning: ${currentLocation.spoofReason}`);
+        setIsSpoofingDetected(true);
+        setSpoofingAttempts(prev => prev + 1);
+      } else {
+        // If location looks good, save it as a reference point
+        setLastNonSpoofedLocation({
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude
+        });
+      }
+      
+      // Verify IP location consistency as an additional check
+      const locationConsistency = await verifyLocationConsistency(
+        currentLocation.latitude,
+        currentLocation.longitude
+      );
+      
+      setConsistencyCheckResult(locationConsistency);
+      
+      if (!locationConsistency.consistent) {
+        setSpoofingWarning((prev) => 
+          prev ? `${prev}. Also: ${locationConsistency.reason}` : `Warning: ${locationConsistency.reason}`
+        );
+        setIsSpoofingDetected(true);
+        setSpoofingAttempts(prev => prev + 1);
+      }
+      
+      // Calculate distance to target location
       const currentDistance = calculateDistance(
-        currentUserLocation.latitude,
-        currentUserLocation.longitude,
+        currentLocation.latitude,
+        currentLocation.longitude,
         currentPlace.latitude,
         currentPlace.longitude
       );
@@ -219,18 +308,27 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       }));
       
       // Check if user is within the threshold distance
-      if (currentDistance <= currentPlace.thresholdDistance) {
+      // Only succeed if within distance AND no spoofing detected
+      if (currentDistance <= currentPlace.thresholdDistance && 
+          !currentLocation.spoofDetected &&
+          locationConsistency.consistent) {
         setVerificationResult({
           success: true,
           message: `Location verified! You are ${Math.round(currentDistance)}m from the target.`
         });
         
         setClueFound(true);
-        // Show the file upload section
       } else {
+        // Set failure message based on the reason
+        let failureMessage = `Too far away: ${Math.round(currentDistance)}m. Need to be within ${currentPlace.thresholdDistance}m.`;
+        
+        if (currentLocation.spoofDetected || !locationConsistency.consistent) {
+          failureMessage = "Location verification failed due to potential location spoofing.";
+        }
+        
         setVerificationResult({
           success: false,
-          message: `Too far away: ${Math.round(currentDistance)}m. Need to be within ${currentPlace.thresholdDistance}m.`
+          message: failureMessage
         });
       }
     } catch (error) {
@@ -241,6 +339,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     }
   };
 
+  // Effect for moving to next clue after image upload
   useEffect(() => {
     if (!imageUploaded || !currentPlace) return;
     setCompletedPlaces(prev => [...prev, currentPlace.id]);
@@ -270,12 +369,21 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     
   }, [imageUploaded]);
 
+  // Handle image upload and upload to IPFS
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setMintLoader(true);
       setPreviewUrl(URL.createObjectURL(file));
       try {
+        // First check if we've flagged spoofing
+        if (isSpoofingDetected) {
+          setLocationError("Cannot upload image due to potential location spoofing.");
+          setSpoofingAttempts(prev => prev + 1);
+          setMintLoader(false);
+          return;
+        }
+        
         const ipfsUrl = await uploadToIPFS(file);
         console.log("File uploaded to IPFS:", ipfsUrl);
   
@@ -494,17 +602,35 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
             </div>
             
             <div className="mt-10 font-serif text-[#6D3B00]">
-            <h2 className="text-xl font-bold mb-3">Adventure Awaits, Explorer!</h2>
-            <p className="mb-4">
-              Embark on a thrilling journey through hidden locations, where ancient treasures and crypto rewards await the brave. Each discovery is verified with privacy-preserving zero-knowledge proofs, ensuring your adventure remains yours alone.
-            </p>
-            <p className="mb-4">
-              Follow the map, solve the clues, and capture evidence of your discoveries to earn exclusive on-chain rewards on BASE. With each location you conquer, your digital treasure chest grows!
-            </p>
-            <p className="text-sm italic">
-              Will you be the one to claim the 0.01 ETH bounty and mint rare location-based NFTs that prove your exploits? Your quest begins with a single step...
-            </p>
-          </div>
+              <h2 className="text-xl font-bold mb-3">Adventure Awaits, Explorer!</h2>
+              <p className="mb-4">
+                Embark on a thrilling journey through hidden locations, where ancient treasures and crypto rewards await the brave. Each discovery is verified with privacy-preserving zero-knowledge proofs, ensuring your adventure remains yours alone.
+              </p>
+              <p className="mb-4">
+                Follow the map, solve the clues, and capture evidence of your discoveries to earn exclusive on-chain rewards on BASE. With each location you conquer, your digital treasure chest grows!
+              </p>
+              <p className="text-sm italic">
+                Will you be the one to claim the 0.01 ETH bounty and mint rare location-based NFTs that prove your exploits? Your quest begins with a single step...
+              </p>
+            </div>
+            
+            {/* Anti-spoofing security message */}
+            <div className="mt-4 mb-4 p-3 bg-[#2C1206]/30 border border-[#8B4513] rounded-lg flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#8B4513] flex-shrink-0" />
+              <p className="text-sm text-[#8B4513] text-left font-serif">
+                This adventure uses advanced security to ensure fair play. Location spoofing will be detected and may disqualify you from rewards.
+              </p>
+            </div>
+            
+            {/* VPN warning if detected */}
+            {vpnDetected && (
+              <div className="my-4 p-3 bg-[#5E1E1E]/30 border border-[#AF4C4C] rounded-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-[#AF4C4C] flex-shrink-0" />
+                <p className="text-sm text-[#AF4C4C] text-left font-serif">
+                  A VPN or proxy has been detected. Please disable it for accurate location verification.
+                </p>
+              </div>
+            )}
             
             <div className="mt-8">
               <button 
@@ -532,11 +658,24 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       <div className="flex flex-col items-center justify-center min-h-screen bg-[url('/map-bg.svg')] bg-cover bg-center">
         <div className="max-w-md w-full relative">
           <div className="w-full min-h-[600px] bg-[url('/map-paper.svg')] bg-cover bg-center p-6 rounded-lg">
-            {/* Map guidance text - NEW! */}
+            {/* Map guidance text */}
             <div className="text-center mb-6">
               <p className="text-[#6D3B00] font-serif text-lg font-bold">Find The Hidden Locations</p>
               <p className="text-[#8B4513] font-serif text-sm">Tap on the glowing stone to view your current clue</p>
             </div>
+            
+            {/* Spoofing Warning Bar */}
+            {(isSpoofingDetected || vpnDetected) && (
+              <div className="mb-4 p-3 bg-[#5E1E1E]/30 border border-[#AF4C4C] rounded-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-[#AF4C4C] flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-[#AF4C4C] font-medium font-serif">Location Verification Issue</p>
+                  <p className="text-xs text-[#AF4C4C] font-serif">
+                    {vpnDetected ? "VPN or proxy detected. Please disable it." : spoofingWarning || "Potential location spoofing detected."}
+                  </p>
+                </div>
+              </div>
+            )}
             
             {/* Top navigation elements */}
             <div className="flex justify-center gap-4 mb-8">
@@ -710,6 +849,28 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 <p>Clue {currentPlaceIndex + 1} - ({currentPlace.city}, {Math.round(distances[currentPlace.id])}m away)</p>
               </div>
             </div>
+            
+            {/* Spoofing Warning */}
+            {spoofingWarning && (
+              <div className="mb-4 p-3 bg-[#5E1E1E]/30 border border-[#AF4C4C] rounded-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-[#AF4C4C] flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-[#AF4C4C] font-medium font-serif">Location Verification Issue</p>
+                  <p className="text-xs text-[#AF4C4C] font-serif">{spoofingWarning}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Security Shield when no spoofing */}
+            {!spoofingWarning && !isSpoofingDetected && verificationResult?.success && (
+              <div className="mb-4 p-3 bg-[#2C5E1E]/30 border border-[#4CAF50] rounded-lg flex items-center gap-2">
+                <Shield className="w-5 h-5 text-[#4CAF50] flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-[#4CAF50] font-medium font-serif">Secure Location Verified</p>
+                  <p className="text-xs text-[#4CAF50] font-serif">Your authentic location has been securely verified.</p>
+                </div>
+              </div>
+            )}
             
             {/* Verification result */}
             {verificationResult && (
@@ -928,7 +1089,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[url('/map-bg.svg')] bg-cover bg-center">
         {/* Confetti animation */}
-        {confettiActive && (
+        {confettiActive && !isSpoofingDetected && (
           <div className="fixed inset-0 pointer-events-none z-50">
             {[...Array(50)].map((_, i) => (
               <div 
@@ -963,6 +1124,20 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 </p>
               </div>
             </div>
+            
+            {/* Spoofing Warning if detected */}
+            {isSpoofingDetected && (
+              <div className="mb-6 p-4 bg-[#5E1E1E]/30 border border-[#AF4C4C] rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-[#AF4C4C] flex-shrink-0" />
+                  <p className="text-sm text-[#AF4C4C] font-medium">Security Alert</p>
+                </div>
+                <p className="text-xs text-[#AF4C4C] mt-2">
+                  Location spoofing was detected during your adventure. This may affect your eligibility for rewards.
+                  Please ensure you're using your actual location without VPNs or GPS mocking apps.
+                </p>
+              </div>
+            )}
 
             {/* Wallet Connection or Manual Address Input */}
             {!walletAddress || walletAddress === "0x...." ? (
@@ -1031,12 +1206,18 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                     <div className="text-center mt-6">
                       <button
                         onClick={handleManualClaim}
-                        disabled={!isValidAddress}
-                        className={`bg-[#8B4513] text-[#D4BE94] px-6 py-3 rounded-lg border border-[#D4BE94] flex items-center justify-center hover:bg-[#6D3B00] transition-colors mx-auto ${!isValidAddress ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!isValidAddress || isSpoofingDetected}
+                        className={`bg-[#8B4513] text-[#D4BE94] px-6 py-3 rounded-lg border border-[#D4BE94] flex items-center justify-center hover:bg-[#6D3B00] transition-colors mx-auto ${(!isValidAddress || isSpoofingDetected) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <Trophy className="h-5 w-5 mr-2" />
                         <span className="font-serif">Claim Reward</span>
                       </button>
+                      
+                      {isSpoofingDetected && (
+                        <p className="text-[#AF4C4C] text-xs mt-2 font-serif">
+                          Unable to claim: Potential location spoofing detected
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1047,7 +1228,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                     
                     <button
                       onClick={handleConnectWallet}
-                      disabled={connectingWallet}
+                      disabled={connectingWallet || isSpoofingDetected}
                       className="w-full py-3 px-4 rounded-lg bg-[#8B4513] hover:bg-[#6D3B00] text-[#D4BE94] font-medium transition-all flex items-center justify-center disabled:opacity-70"
                     >
                       {connectingWallet ? (
@@ -1068,6 +1249,12 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                         </>
                       )}
                     </button>
+                    
+                    {isSpoofingDetected && (
+                      <p className="text-[#AF4C4C] text-xs mt-2 font-serif text-center">
+                        Unable to claim: Potential location spoofing detected
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1113,8 +1300,8 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                 
                 <button
                   onClick={handleClaimReward}
-                  disabled={sendingReward || rewardResult?.success}
-                  className={`w-full py-3 px-4 rounded-lg bg-[#8B4513] hover:bg-[#6D3B00] text-[#D4BE94] font-medium transition-all flex items-center justify-center ${sendingReward || rewardResult?.success ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={sendingReward || rewardResult?.success || isSpoofingDetected}
+                  className={`w-full py-3 px-4 rounded-lg bg-[#8B4513] hover:bg-[#6D3B00] text-[#D4BE94] font-medium transition-all flex items-center justify-center ${(sendingReward || rewardResult?.success || isSpoofingDetected) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {sendingReward ? (
                     <>
@@ -1136,6 +1323,12 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                     </>
                   )}
                 </button>
+                
+                {isSpoofingDetected && (
+                  <p className="text-[#AF4C4C] text-xs text-center font-serif">
+                    Unable to claim: Potential location spoofing detected
+                  </p>
+                )}
               </div>
             )}
           </div>
