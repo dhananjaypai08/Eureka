@@ -6,8 +6,8 @@ import { Camera, ArrowLeft, MapPin, Compass, Target, Award, CheckCircle, Trophy,
 import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
 
 // Get the number of clues per game from environment variables
-const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "4");
-const REWARD_AMOUNT = process.env.NEXT_PUBLIC_REWARD_AMOUNT || "0.01";
+const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "3");
+const REWARD_AMOUNT = process.env.NEXT_PUBLIC_REWARD_AMOUNT || "5";
 
 export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLocation }) => {
   // Game state
@@ -29,7 +29,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
-  const explorerBaseUrl = "https://sepolia.basescan.org/tx/";
+  const explorerBaseUrl = process.env.NEXT_PUBLIC_EXPLORER;
 
   // Location state
   const [distances, setDistances] = useState<{[key: number]: number}>({});
@@ -129,34 +129,16 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           place.city.toLowerCase() === initialUserLocation.city.toLowerCase()
         );
         
-        // If no places found in user's city, use nearby places as fallback
-        let selectedPlaces: Place[] = [];
-        
-        if (cityPlaces.length >= CLUES_PER_GAME) {
-          // If we have enough places in the city, randomly select the required number
-          selectedPlaces = shuffleArray(cityPlaces).slice(0, CLUES_PER_GAME);
-        } else if (cityPlaces.length > 0) {
-          // If we have some places in the city but not enough, use all of them
-          selectedPlaces = cityPlaces;
-        } else {
-          // If no places in the city, calculate distances and use the closest ones
-          const distanceMap: {[key: number]: number} = {};
-          
-          allPlaces.forEach(place => {
-            const distance = calculateDistance(
-              initialUserLocation.latitude,
-              initialUserLocation.longitude,
-              place.latitude,
-              place.longitude
-            );
-            distanceMap[place.id] = distance;
-          });
-          
-          // Sort places by distance and take the closest ones
-          selectedPlaces = [...allPlaces]
-            .sort((a, b) => distanceMap[a.id] - distanceMap[b.id])
-            .slice(0, CLUES_PER_GAME);
+        // Check if we have enough places in the user's city
+        if (cityPlaces.length < CLUES_PER_GAME) {
+          // Not enough clues in the user's city
+          setError(`Not enough quests available in ${initialUserLocation.city}. We need at least ${CLUES_PER_GAME} quests, but only found ${cityPlaces.length}. Please contact an admin to add more quests in your area.`);
+          setLoading(false);
+          return;
         }
+        
+        // If we have enough places in the city, randomly select the required number
+        const selectedPlaces = shuffleArray(cityPlaces).slice(0, CLUES_PER_GAME);
         
         // Calculate initial distances to each place
         const distanceMap: {[key: number]: number} = {};
@@ -502,7 +484,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
               Follow the map, solve the clues, and capture evidence of your discoveries to earn exclusive on-chain rewards on BASE. With each location you conquer, your digital treasure chest grows!
             </p>
             <p className="text-sm italic">
-              Will you be the one to claim the 0.01 ETH bounty and mint rare location-based NFTs that prove your exploits? Your quest begins with a single step...
+              Will you be the one to claim the 5 USDC bounty on BASE and mint rare location-based NFTs that prove your exploits? Your quest begins with a single step...
             </p>
           </div>
             
@@ -959,7 +941,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
               </p>
               <div className="bg-[#2C1206]/20 border border-[#8B4513] rounded-lg p-4 mb-6">
                 <p className="text-[#8B4513] font-medium font-serif">
-                  You've earned {REWARD_AMOUNT} ETH and {completedPlaces.length} unique NFTs!
+                  You've earned {REWARD_AMOUNT} USDC on BASE and {completedPlaces.length} unique NFTs!
                 </p>
               </div>
             </div>
@@ -1024,7 +1006,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
                       </div>
                       
                       <p className="text-[#D4BE94]/80 text-sm font-serif text-center">
-                        Enter your Ethereum wallet address to receive {REWARD_AMOUNT} ETH and NFT rewards
+                        Enter your Ethereum wallet address to receive {REWARD_AMOUNT} USDC on BASE and NFT rewards
                       </p>
                     </div>
                     

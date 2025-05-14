@@ -17,7 +17,7 @@ const locationImages = locationImagesData as LocationImageMap;
 
 // Contract configuration
 const CONTRACT_ADDRESS = contractData.address;
-const BASE_CHAIN_ID = 84532;
+const BASE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_BASE_CHAIN_ID) || 8453;
 const BASE_RPC = process.env.NEXT_PUBLIC_RPC_URL;
 
 // ABI from imported contract data

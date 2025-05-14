@@ -10,9 +10,10 @@ import contractData from "../../abi/LocationPOAP.json";
 
 // Contract configuration
 const CONTRACT_ADDRESS = contractData.address;
-const BASE_CHAIN_ID = 84532;
+const BASE_CHAIN_ID = process.env.NEXT_PUBLIC_BASE_CHAIN_ID;
 const BASE_RPC = process.env.NEXT_PUBLIC_RPC_URL;
 const ABI = contractData.abi;
+const REWARD_AMOUNT = Number(process.env.NEXT_PUBLIC_REWARD_AMOUNT) || 5;
 
 interface LeaderboardEntry {
   user: string;
@@ -386,7 +387,7 @@ export default function Home() {
                     <div className="grid grid-cols-12 text-sm border-b border-amber-800/50 py-3 px-2 sm:px-4">
                       <div className="col-span-2 sm:col-span-1 font-bold">RANK</div>
                       <div className="col-span-6 sm:col-span-7 font-bold">PLAYER</div>
-                      <div className="col-span-4 font-bold text-right">REWARDS</div>
+                      <div className="col-span-4 font-bold text-right">EARNED POAPS</div>
                     </div>
                     
                     {leaderboardLoading ? (
@@ -418,7 +419,7 @@ export default function Home() {
                               </span>
                             </div>
                             <div className="col-span-4 text-right self-center text-amber-400 text-xs sm:text-sm">
-                              {(Number(item.poaps.toString()) * 0.01).toFixed(2)} ETH
+                              {(Number(item.poaps.toString()) * 1).toFixed(0)}
                             </div>
                           </div>
                         ))}

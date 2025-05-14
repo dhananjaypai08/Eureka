@@ -36,6 +36,13 @@ export async function connectWallet(): Promise<string> {
   return accounts[0];
 }
 
+const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+
+// Minimal ERC20 ABI for transfer
+const ERC20_ABI = [
+  "function transfer(address to, uint256 amount) public returns (bool)"
+];
+
 // Send ETH reward to the user's wallet
 export const sendReward = async (
   toAddress: string,
@@ -50,15 +57,21 @@ export const sendReward = async (
     
     // Create wallet with private key - Updated for ethers v6
     const wallet = new ethers.Wallet(process.env.NEXT_PUBLIC_REWARD_PRIVATE_KEY || "", provider);
+
+    const usdc = new ethers.Contract(USDC_ADDRESS, ERC20_ABI, wallet);
+    const amount_parsed = ethers.parseUnits(amount, 6); // amount USDC
     
     // Convert ETH amount to wei - Updated for ethers v6
-    const weiAmount = ethers.parseEther(amount);
+    const tx = await usdc.transfer(toAddress, amount_parsed);
+
+    // Wait for it to be mined
+    // await tx.wait();
     
-    // Send transaction - Updated for ethers v6
-    const tx = await wallet.sendTransaction({
-      to: toAddress,
-      value: weiAmount
-    });
+    // // Send transaction - Updated for ethers v6
+    // const tx = await wallet.sendTransaction({
+    //   to: toAddress,
+    //   value: weiAmount
+    // });
     
     // Wait for transaction to be mined
     await tx.wait();

@@ -2,11 +2,11 @@
   {
     "id": 1,
     "name": "Eesha Krupa Building",
-    "clue": "Total : 2 Words. The building is named after a famous Indian actress who played in Jannat2 + the second word for the building is a common hindi term which signifies blessing/favor in India.",
+    "clue": "This is the only apartment in Rambaug Lane 1 near Kotak Mahindra Bank that hasn't gone under redevelopment. The building is named after a famous Indian actress who played in Jannat2",
     "latitude": 19.242284696517313,
     "longitude": 73.13484960148622,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 2,
@@ -15,7 +15,7 @@
     "latitude": 19.248736,
     "longitude": 73.140214,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 3,
@@ -24,7 +24,7 @@
     "latitude": 19.242199638157526,
     "longitude": 73.13656040841443,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@
     "latitude": 19.24206398976848,
     "longitude": 73.13971732162364,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 5,
@@ -42,7 +42,7 @@
     "latitude": 19.244546664001724,
     "longitude": 73.13150821451312,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 6,
@@ -51,7 +51,7 @@
     "latitude": 19.24689932040889,
     "longitude": 73.13326772461596,
     "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 7,
@@ -60,7 +60,7 @@
     "latitude": 18.921984,
     "longitude": 72.834654,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 8,
@@ -69,7 +69,7 @@
     "latitude": 18.9472,
     "longitude": 72.8233,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 9,
@@ -78,7 +78,7 @@
     "latitude": 19.0883,
     "longitude": 72.8263,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 10,
@@ -87,7 +87,7 @@
     "latitude": 19.0167,
     "longitude": 72.8303,
     "city": "Mumbai",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 11,
@@ -96,7 +96,7 @@
     "latitude": 32.236938,
     "longitude": 76.326815,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 12,
@@ -105,7 +105,7 @@
     "latitude": 32.236693617708596,
     "longitude": 76.32660127164279,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 13,
@@ -114,7 +114,7 @@
     "latitude": 32.236693617708596,
     "longitude": 76.32660127164279,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 14,
@@ -123,7 +123,7 @@
     "latitude": 32.236938,
     "longitude": 76.326815,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 15,
@@ -132,7 +132,7 @@
     "latitude": 32.236550631771664,
     "longitude": 76.32611265158349,
     "city": "McLeodGanj",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   },
   {
     "id": 16,
@@ -141,15 +141,6 @@
     "latitude": 32.23686368379722,
     "longitude": 76.3268293031848,
     "city": "McleodGanj",
-    "thresholdDistance": 20
-  },
-  {
-    "id": 17,
-    "name": "Eesha Krupa Apartment",
-    "clue": "This is the only apartment that is not gone under redevelopment yet, and is near Kotak Mahindra Bank, Rambaug Lane 1",
-    "latitude": 19.242581003605554,
-    "longitude": 73.13482255850738,
-    "city": "Kalyan",
-    "thresholdDistance": 20
+    "thresholdDistance": 50
   }
 ]
