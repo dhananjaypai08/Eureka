@@ -142,5 +142,32 @@
     "longitude": 76.3268293031848,
     "city": "McleodGanj",
     "thresholdDistance": 50
+  },
+  {
+    "id": 17,
+    "name": "Space Needle",
+    "clue": "This is Seattle’s most iconic climb. Conquer all 832 open-air steps to reach the top.\nThe view is legendary — so is the name.\nWhat’s the name of this towering place?",
+    "latitude": 47.6205131,
+    "longitude": -122.3493036,
+    "city": "Seattle",
+    "thresholdDistance": 50
+  },
+  {
+    "id": 18,
+    "name": "Pike's Place, Market",
+    "clue": "It opened its doors in 1907 and never looked back.\nOverlooking Elliott Bay, it's the soul of Seattle's market.\nWhere fish fly and farmers thrive,\nThis market’s been alive and buzzing for over a century.\nWhat’s the name of this iconic gathering place?",
+    "latitude": 47.6093968,
+    "longitude": -122.3414102,
+    "city": "Seattle",
+    "thresholdDistance": 50
+  },
+  {
+    "id": 19,
+    "name": "The Spheres by Amazon.com ",
+    "clue": "In the heart of the city, a jungle thrives indoors.\nWith 40,000 plants from 30+ countries, it restores.\nA workplace reimagined, where nature leads the way —\nGlass orbs where green and innovation stay.\nWhat’s the name of this living, breathing workspace?",
+    "latitude": 47.6156532,
+    "longitude": -122.3394822,
+    "city": "Seattle",
+    "thresholdDistance": 50
   }
 ]

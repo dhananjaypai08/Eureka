@@ -56,6 +56,18 @@ export default function CreateQuest() {
     }
   }, [walletAddress, isWhitelisted])
 
+  useEffect(() => {
+    const updateCity = async () => {
+      if (latitude && longitude) {
+        setCity('detecting...');
+        const userCity = await detectCity(latitude, longitude);
+        setCity(userCity);
+      }
+    };
+    
+    updateCity();
+  }, [latitude, longitude]);
+
   // Connect Ethereum wallet (MetaMask)
   const connectEthereumWallet = async () => {
     if (!window.ethereum) {
@@ -229,7 +241,7 @@ export default function CreateQuest() {
       longitude,
       city,
       thresholdDistance,
-      walletAddress, // Include the wallet address with the submission
+      // walletAddress, // Include the wallet address with the submission
     }
 
     try {
@@ -644,6 +656,7 @@ export default function CreateQuest() {
                 />
               </div>
 
+              {/* City Field */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#6D3B00] flex items-center font-serif">
                   <Building className="h-4 w-4 mr-2" />
@@ -653,7 +666,7 @@ export default function CreateQuest() {
                   <input
                     value={city}
                     disabled={true}
-                    className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18] font-serif cursor-not-allowed"
+                    className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18]/70 font-serif cursor-not-allowed"
                   />
                   {city === 'detecting...' && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -677,45 +690,52 @@ export default function CreateQuest() {
                 />
               </div>
 
+              {/* Latitude and Longitude Fields */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-[#6D3B00] flex items-center font-serif">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Latitude
-                  </label>
-                  <div className="relative">
-                    <input
-                      value={latitude ?? ''}
-                      disabled
-                      className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18]/70 font-serif cursor-not-allowed"
-                    />
-                    {!latitude && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-[#8B4513] border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-[#6D3B00] flex items-center font-serif">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Longitude
-                  </label>
-                  <div className="relative">
-                    <input
-                      value={longitude ?? ''}
-                      disabled
-                      className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18]/70 font-serif cursor-not-allowed"
-                    />
-                    {!longitude && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="w-4 h-4 border-2 border-[#8B4513] border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#6D3B00] flex items-center font-serif">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Latitude
+                </label>
+                <div className="relative">
+                  <input
+                    value={latitude ?? ''}
+                    onChange={(e) => setLatitude(parseFloat(e.target.value) || null)}
+                    type="number"
+                    step="0.0000001"
+                    className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18] font-serif"
+                    placeholder="Enter latitude coordinate"
+                  />
+                  {!latitude && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-[#8B4513] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#6D3B00] flex items-center font-serif">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Longitude
+                </label>
+                <div className="relative">
+                  <input
+                    value={longitude ?? ''}
+                    onChange={(e) => setLongitude(parseFloat(e.target.value) || null)}
+                    type="number"
+                    step="0.0000001"
+                    className="w-full p-3 bg-[#FBF6E9] border-2 border-[#8B4513] rounded-md text-[#3A2A18] font-serif"
+                    placeholder="Enter longitude coordinate"
+                  />
+                  {!longitude && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-[#8B4513] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
               {successMessage && (
                 <div className="p-4 bg-[#115A2E]/10 border-2 border-[#115A2E] rounded-md text-[#115A2E] text-sm font-serif relative">
