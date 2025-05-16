@@ -1,82 +1,111 @@
-# EUREKA🗺️🔍
-A privacy-preserving location-based scavenger hunt powered by zero-knowledge proofs and blockchain rewards.
+# 🧭 Eureka - Location based scavenger hunting with Real Rewards
 
-## 📋 Overview
+Eureka is a location-based treasure hunt platform that transforms everyday exploration into thrilling adventures with real crypto rewards. Users follow AI-generated cryptic clues to discover hidden gems in their cities, capturing proof of their discoveries while earning on-chain rewards and NFTs that prove their explorations.
 
-ZK Location Hunt is a next-generation scavenger hunt application that allows users to discover real-world locations while maintaining complete privacy. Using zero-knowledge proofs, the application verifies users are at specific locations without revealing their exact coordinates, combining the thrill of discovery with robust privacy protection.
+[![Deployed on Base](https://img.shields.io/badge/Deployed%20on-Base-0052FF)](https://basescan.org)
+[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-black)](https://nextjs.org/)
 
-## ✨ Key Features
- 
-- **Privacy-First Location Verification:** Your location data never leaves your device
-thanks to zero-knowledge proofs.
+## Live Deployments 
+- [Play Game](https://eureka-swea.onrender.com/)
+- [Mainnet Contract](https://basescan.org/address/0xcB15622d404fc10e49d6f53435814d9Fb27dbD72)
 
-- **Blockchain-Verified Discoveries:** Mint unique NFTs/POAPs for each location you discover
+## 🌟 Features
 
+- **Interactive Treasure Maps**: Beautiful, intuitive interface showing nearby quests
+- **AI-Generated Clues**: Cryptic hints customized to each location created by LLMs
+- **Privacy-Preserving Verification**: Zero-knowledge proofs verify locations without tracking users
+- **On-Chain Rewards**: Earn 5 USDC on Base for each verified discovery (for early users)
+- **Location POAPs**: Mint unique NFTs as proof of your explorations
+- **Footprints Map**: Visualize and share your exploration journey
+- **Leaderboards**: Compete with friends to become the top explorer
+- **User-Generated Quests**: Add your favorite spots to the platform
 
-- **Real Crypto Rewards:** Earn ETH rewards for completing quests
+## 🛠️ Tech Stack
 
-- **Interactive Map Interface:** View all your discoveries on an interactive map 
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Blockchain**: Ethereum, Base L2, ERC-721 (NFTs), ERC2771 (Account Abstraction)
+- **AI**: Cohere Command model for clue generation
+- **Maps**: Mapbox, Leaflet for interactive map integration
+- **Privacy**: ZokratesJS for zero-knowledge proofs
+- **Storage**: IPFS via Infura for decentralized storage
+- **Authentication**: Wallet connect (MetaMask, Keplr)
 
-- **Custom Quest Creation:** Create personalized hunts for friends or 
+## 📋 Prerequisites
 
-- **Leaderboard System:** Compete with other explorers globally
+- Node.js 18.x or higher
+- npm or yarn
+- MetaMask or compatible wallet with Base network configured
 
-## 🛠️ Technology Stack
-- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS
-- **Privacy:** Zero-knowledge proofs using ZoKrates
-- **Blockchain:** Ethereum/Base blockchain, ethers.js
-- **Storage:** IPFS for decentralized content storage
-- **Geolocation:** Browser Geolocation API, OpenCage for reverse geocoding
-- **Maps:** Leaflet for interactive maps
+## 🚀 Getting Started
 
-
-## Prerequisites
-
-- Node.js (v18+)
-- Yarn or npm
-- MetaMask or other Ethereum wallet
-- Base network configured in your wallet
-
-## Installation
+### Installation
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/zk-location-hunt.git
-cd eureka
-```
-
-2. Install dependencies:
-```bash
-yarn install
-# or
-npm install
-```
-
-3.Create a `.env.local` file with the following variables:
-
-```bash
-NEXT_PUBLIC_RPC_URL=your_base_rpc_url
-NEXT_PUBLIC_REWARD_PRIVATE_KEY=your_private_key_for_rewards
-NEXT_PUBLIC_MINT_PRIVATE_KEY=your_private_key_for_minting
-NEXT_PUBLIC_OPENCAGE_API_KEY=your_opencage_api_key
-NEXT_PUBLIC_CLUES_PER_GAME=4
-NEXT_PUBLIC_REWARD_AMOUNT=0.01
-```
-4. Run the development server:
    ```bash
+   git clone https://github.com/dhananjaypai08/Eureka.git
    cd frontend
-   npm run dev
    ```
 
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-## 🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+3. Environment setup:
+   Create a `.env` file in the root directory with the following variables:
+   ```
+   cp .env.example .env // configure your env credentials
+   ```
 
-1.Fork the repository
-2.Create your feature branch `(git checkout -b feature/amazing-feature)`
-3.Commit your changes `(git commit -m 'Add some amazing feature')`
-4.Push to the branch `(git push origin feature/amazing-feature)`
-5.Open a Pull Request
+4. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🗺️ Usage
+
+1. **Home Page**: View available quests on the treasure map
+2. **Start Quest**: Click "Launch Game" to begin your treasure hunt
+3. **Follow Clues**: Navigate to the location using the cryptic clues provided
+4. **Verify Location**: When you think you're at the right spot, click "Verify Location"
+5. **Capture Evidence**: Take a photo to prove your discovery
+6. **Collect Rewards**: Connect your wallet to claim USDC rewards and mint your discovery NFT
+7. **Share Achievements**: View your discoveries in the Footprints map and share on social media
+
+## 🔗 Smart Contracts
+
+The main contract powering Eureka is the LocationPOAP.sol contract deployed on Base. It handles:
+
+- Minting location-based NFTs
+- Verifying zero-knowledge proofs of location
+- Managing rewards for discoveries
+- Tracking user exploration history
+
+## 🌱 Business Model
+
+Eureka employs a novel "clue amplification" revenue model:
+- Local businesses pay fees to prioritize their locations in nearby users' clue sequences
+- They pre-fund quests to drive targeted foot traffic
+- Explorers earn rewards for discovering new places
+- The platform grows through user-generated content
+
+## 🙏 Acknowledgments
+
+- [Base](https://base.org/) for L2 infrastructure, helping us to sponsor for user's gas
+- [Witness-chain](https://www.witnesschain.com/) for zk based locaton verification using campaigns
+- [Cohere](https://cohere.com/) for AI capabilities
+- [Mapbox](https://www.mapbox.com/) and [Leaflet](https://leafletjs.com/) for mapping
+- [ZokratesJS](https://zokrates.github.io/) for zero-knowledge proofs
+- [IPFS/Infura](https://infura.io/) for decentralized storage
+
+## 📬 Contact
+
+For questions or suggestions, please [open an issue](https://github.com/dhananjaypai08/Eureka/issues/new) or contact us at [dhananjay2002pai@gmail.com](mailto:dhananjay2002pai@gmail.com).
+
+---
+
+Built with ❤️ by the Eureka team during the Based Fellowship
