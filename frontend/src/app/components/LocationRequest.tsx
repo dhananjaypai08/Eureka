@@ -60,7 +60,7 @@ export const LocationRequest = () => {
       
       // Detect city from coordinates
       const city = await detectCity(location.latitude, location.longitude);
-      
+      console.log("detected city ", city);
       console.log("User location:", { ...location, city });
       
       // Save location with city

@@ -96,13 +96,14 @@ export const detectCity = async (
     }
     
     const data = await response.json();
-    
+    console.log("detected data, ", data)
     if (data.results && data.results.length > 0) {
       const result = data.results[0];
       const components = result.components;
       
       // Extract city name - try different possible fields
-      let city = components.city || 
+      let city = components.suburb ||
+                components.city || 
                 components.town || 
                 components.village || 
                 components.county || 
