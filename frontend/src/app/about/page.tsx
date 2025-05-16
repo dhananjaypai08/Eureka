@@ -8,7 +8,7 @@ export default function AboutPage() {
             About Our Treasure Quest
           </h1>
           <p className="font-serif text-xl text-[#5E4B32] max-w-2xl mx-auto leading-relaxed">
-            Discover the future of location-based gaming with privacy at its core
+            Discover the future of location-based gaming with AI-generated clues and privacy at its core
           </p>
         </div>
 
@@ -32,7 +32,7 @@ export default function AboutPage() {
             </h2>
             
             <p className="text-[#5E4B32] text-lg mb-8 leading-relaxed font-serif letter-spacing-wide">
-              Our location-based treasure hunt uses zero-knowledge proofs to verify your location
+              Our location-based treasure hunt uses AI-generated clues and zero-knowledge proofs to verify your location
               without ever knowing exactly where you are - protecting your privacy while ensuring
               fair gameplay. Explore the world while maintaining complete location privacy.
             </p>
@@ -52,10 +52,10 @@ export default function AboutPage() {
                     <span className="text-xs font-bold text-[#FBF6E9]">1</span>
                   </div>
                   <h4 className="text-lg font-medium text-[#8B4513] mb-2 font-serif tracking-wide">
-                    Receive a Cryptic Clue
+                    Receive an AI-Generated Clue
                   </h4>
                   <p className="text-[#5E4B32] font-serif leading-relaxed letter-spacing-wide">
-                    Unravel mysteries and puzzles that lead you to interesting locations in your city or around the world.
+                    Our AI creates unique, location-specific clues that lead you to interesting places in your city or around the world, ensuring there's always an adventure nearby.
                   </p>
                 </div>
                 
@@ -107,14 +107,25 @@ export default function AboutPage() {
             <div className="h-px bg-[#8B4513]/50 w-20"></div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* New AI Clue Generation technology card */}
             <div className="bg-[url('/card.svg')] bg-cover bg-center p-6 rounded-md border-2 border-[#8B4513] shadow-lg hover:shadow-xl transition-all">
               <div className="w-16 h-16 mb-6 mx-auto">
-                <img src="/globe.svg" alt="Zero-Knowledge Proofs" className="w-full h-full" />
+                <img src="/globe.svg" alt="AI Clue Generation" className="w-full h-full" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-[#6D3B00] text-center font-serif">Zero-Knowledge Proofs</h3>
+              <h3 className="text-xl font-semibold mb-3 text-[#6D3B00] text-center font-serif">AI Clue Generation</h3>
               <p className="text-[#5E4B32] text-center font-serif leading-relaxed letter-spacing-wide">
-                Advanced cryptography that allows location verification without revealing your exact coordinates, ensuring complete privacy.
+                AI Agent generates location-based clues so adventures exist anywhere.
+              </p>
+            </div>
+            
+            <div className="bg-[url('/card.svg')] bg-cover bg-center p-6 rounded-md border-2 border-[#8B4513] shadow-lg hover:shadow-xl transition-all">
+              <div className="w-16 h-16 mb-6 mx-auto">
+                <img src="/file.svg" alt="Zero-Knowledge Proofs" className="w-full h-full" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-[#6D3B00] text-center font-serif">Security</h3>
+              <p className="text-[#5E4B32] text-center font-serif leading-relaxed letter-spacing-wide">
+                ZkProofs location verification without revealing it.
               </p>
             </div>
             
@@ -124,7 +135,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold mb-3 text-[#6D3B00] text-center font-serif">Based Eco</h3>
               <p className="text-[#5E4B32] text-center font-serif leading-relaxed letter-spacing-wide">
-                Built on Base, A Layer 2 solution for Ethereum, providing low-cost, fast transactions for rewards and achievements.
+                Powered by Base L2 for fast, low-cost reward transactions.
               </p>
             </div>
             
@@ -134,8 +145,43 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold mb-3 text-[#6D3B00] text-center font-serif">Modern Frontend</h3>
               <p className="text-[#5E4B32] text-center font-serif leading-relaxed letter-spacing-wide">
-                Built with Next.js and Tailwind CSS for a responsive, fast, and visually stunning interface across all devices.
+                Crafted with Next.js + Tailwind for speed and seamless UX.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Adaptive Experience Section - NEW */}
+        <div className="mb-16">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-px bg-[#8B4513]/50 w-20"></div>
+            <h2 className="text-3xl font-bold text-center text-[#6D3B00] font-serif">Adaptive Experience</h2>
+            <div className="h-px bg-[#8B4513]/50 w-20"></div>
+          </div>
+          
+          <div className="bg-[url('/card.svg')] bg-cover bg-center p-8 rounded-md border-2 border-[#8B4513] shadow-xl">
+            <p className="text-[#5E4B32] text-center font-serif leading-relaxed letter-spacing-wide mb-6">
+              Our AI clue generation system ensures that no matter where you are, you'll always have exciting quests to discover. 
+              The system dynamically creates clues based on nearby points of interest, analyzing geographical data to craft 
+              engaging puzzles that lead to interesting locations.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-[#FBF6E9]/60 p-4 rounded-lg border border-[#8B4513]/30">
+                <h3 className="text-lg font-semibold mb-2 text-[#6D3B00] font-serif">Global Availability</h3>
+                <p className="text-[#5E4B32] font-serif text-sm">
+                  When predefined quests aren't available in your area, our AI generates custom clues based on nearby points of interest, 
+                  ensuring you can play anywhere in the world.
+                </p>
+              </div>
+              
+              <div className="bg-[#FBF6E9]/60 p-4 rounded-lg border border-[#8B4513]/30">
+                <h3 className="text-lg font-semibold mb-2 text-[#6D3B00] font-serif">Dynamic Difficulty</h3>
+                <p className="text-[#5E4B32] font-serif text-sm">
+                  AI-generated clues adapt to your location and surroundings, creating puzzles that are challenging yet solvable,
+                  tailored to the unique features of your environment.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -145,7 +191,7 @@ export default function AboutPage() {
           <div className="bg-[url('/map-bg.svg')] bg-cover bg-center p-8 rounded-md border-2 border-[#8B4513] max-w-lg mx-auto relative">
             <h3 className="text-2xl font-bold mb-4 text-[#6D3B00] font-serif">Ready to Begin Your Adventure?</h3>
             <p className="text-[#5E4B32] mb-6 font-serif leading-relaxed letter-spacing-wide">
-              Join thousands of explorers who've already discovered hidden treasures around the world
+              Join thousands of explorers who've already discovered AI-powered treasure hunts around the world
             </p>
             <a href="/" className="inline-block px-8 py-4 rounded-md text-[#FBF6E9] font-medium bg-[#6D3B00] hover:bg-[#8B4513] shadow-lg transition-all transform hover:-translate-y-1 outline outline-1 outline-[#FBF6E9]/30">
               Start Your Quest

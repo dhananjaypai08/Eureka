@@ -271,9 +271,9 @@ export default function Home() {
                     priority
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center px-6 sm:px-20 py-8">
-                    <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">Privacy Shield</h3>
+                    <h3 className="text-xl font-[ElMessiri] font-bold text-[#6D3B00] mb-2 text-center">AI + Privacy</h3>
                     <p className="text-sm text-[#5E4B32] font-[ElMessiri] text-center max-w-[200px]">
-                      Our zero-knowledge proofs verify your location without revealing your coordinates, keeping your movements private.
+                      AI-generated clues unlock adventures anywhere, while zero-knowledge proofs verify your location without exposing it.
                     </p>
                   </div>
                 </div>
