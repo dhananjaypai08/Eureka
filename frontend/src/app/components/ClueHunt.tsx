@@ -1,13 +1,17 @@
+// ClueHunt.tsx
+
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { calculateDistance, getCurrentLocation, detectCity } from "../utils/geoUtils";
 import { connectWallet, sendReward, uploadToIPFS, mintNFT } from "../utils/web3Utils";
 import { Camera, ArrowLeft, MapPin, Compass, Target, Award, CheckCircle, Trophy, Home } from "lucide-react";
 import { Place, UserLocation, VerificationResult, RewardResult, UserLocationMinimal } from "../types";
+import { useCohereClues } from "../../hooks/useCohereClues";
 
 // Get the number of clues per game from environment variables
 const CLUES_PER_GAME = parseInt(process.env.NEXT_PUBLIC_CLUES_PER_GAME || "3");
 const REWARD_AMOUNT = process.env.NEXT_PUBLIC_REWARD_AMOUNT || "5";
+const MIN_CLUES_REQUIRED = CLUES_PER_GAME;
 
 export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLocation }) => {
   // Game state
@@ -25,6 +29,10 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [activeView, setActiveView] = useState<'welcome' | 'map' | 'clue' | 'reward' | 'final-reward'>('welcome');
   const [confettiActive, setConfettiActive] = useState<boolean>(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+  
+  // New state for AI clue generation
+  const [generatingAiClues, setGeneratingAiClues] = useState<boolean>(false);
+  const [insufficientClues, setInsufficientClues] = useState<boolean>(false);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -51,6 +59,9 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
   const [manualWalletAddress, setManualWalletAddress] = useState("");
   const [isValidAddress, setIsValidAddress] = useState(false);
   const [showAddressInput, setShowAddressInput] = useState(true);
+
+  // Use our custom hook for AI clue generation
+  const { generateClues, loading: aiCluesLoading, error: aiCluesError } = useCohereClues();
 
   // Assets to preload
   const assetList = [
@@ -114,6 +125,16 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
     }
   };
 
+  // Helper function to shuffle array
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
   // Load places from places.json and select random ones for this game
   useEffect(() => {
     if (!assetsLoaded) return; // Only proceed if assets are loaded
@@ -130,19 +151,55 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
         );
         
         // Check if we have enough places in the user's city
-        if (cityPlaces.length < CLUES_PER_GAME) {
-          // Not enough clues in the user's city
-          setError(`Not enough quests available in ${initialUserLocation.city}. We need at least ${CLUES_PER_GAME} quests, but only found ${cityPlaces.length}. Please contact an admin to add more quests in your area.`);
-          setLoading(false);
-          return;
+        let selectedPlaces = cityPlaces;
+        
+        // If we don't have enough places (<3), try to generate with AI
+        if (selectedPlaces.length < MIN_CLUES_REQUIRED) {
+          setGeneratingAiClues(true);
+          try {
+            console.log("Not enough clues, generating with AI...");
+            // Generate clues using the hook
+            const aiGeneratedPlaces = await generateClues(
+              initialUserLocation.latitude,
+              initialUserLocation.longitude
+            );
+            console.log("Generated Places : ", aiGeneratedPlaces);
+            
+            if (aiGeneratedPlaces.length > 0) {
+              console.log(`Generated ${aiGeneratedPlaces.length} AI clues`);
+              // Combine existing and AI-generated places
+              selectedPlaces = [...selectedPlaces, ...aiGeneratedPlaces];
+            }
+            
+            // Check if we now have enough places after AI generation
+            if (selectedPlaces.length < MIN_CLUES_REQUIRED) {
+              console.log("Still insufficient clues after AI generation");
+              setInsufficientClues(true);
+              setError(`Not enough quests available in ${initialUserLocation.city}, even after AI generation. Please contact an admin to get your location whitelisted.`);
+              setLoading(false);
+              setGeneratingAiClues(false);
+              return;
+            }
+          } catch (aiError) {
+            console.error("Error generating AI clues:", aiError);
+            if (selectedPlaces.length < MIN_CLUES_REQUIRED) {
+              setInsufficientClues(true);
+              setError(`Not enough quests available in ${initialUserLocation.city}. AI clue generation failed. Please contact an admin to get your location whitelisted.`);
+              setLoading(false);
+              setGeneratingAiClues(false);
+              return;
+            }
+          } finally {
+            setGeneratingAiClues(false);
+          }
         }
         
-        // If we have enough places in the city, randomly select the required number
-        const selectedPlaces = shuffleArray(cityPlaces).slice(0, CLUES_PER_GAME);
+        // Shuffle and limit to requested number of clues
+        const finalSelectedPlaces = shuffleArray(selectedPlaces).slice(0, CLUES_PER_GAME);
         
         // Calculate initial distances to each place
         const distanceMap: {[key: number]: number} = {};
-        selectedPlaces.forEach(place => {
+        finalSelectedPlaces.forEach(place => {
           const distance = calculateDistance(
             initialUserLocation.latitude,
             initialUserLocation.longitude,
@@ -152,7 +209,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
           distanceMap[place.id] = distance;
         });
     
-        setPlaces(selectedPlaces);
+        setPlaces(finalSelectedPlaces);
         setDistances(distanceMap);
         setLoading(false);
       } catch (error) {
@@ -164,16 +221,6 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
 
     fetchPlaces();
   }, [initialUserLocation, assetsLoaded]);
-
-  // Helper function to shuffle array
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
 
   const currentPlace = places[currentPlaceIndex];
   
@@ -417,7 +464,11 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
             <Image src="/compass.svg" alt="Compass" width={32} height={32} priority />
           </div>
         </div>
-        <p className="text-lg text-[#6D3B00] font-serif">Charting the adventure...</p>
+        <p className="text-lg text-[#6D3B00] font-serif">
+          {generatingAiClues 
+            ? "AI is generating adventure clues for you..." 
+            : "Charting the adventure..."}
+        </p>
       </div>
     );
   }
@@ -1149,7 +1200,7 @@ export const ClueHunt = ({ initialUserLocation }: { initialUserLocation: UserLoc
       </button>
     </div>
   );
-}
+};
 
 // Add global confetti animation styles
 const globalStyles = `
