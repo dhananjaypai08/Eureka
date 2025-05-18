@@ -7,6 +7,7 @@ import { MapPin, Compass, Target, Building, Plus, ArrowLeft, Wallet, AlertTriang
 import { detectCity } from '../utils/geoUtils'
 import { BrowserProvider, Contract, Eip1193Provider } from 'ethers'
 import contractData from '../../../abi/LocationPOAP.json'
+import { ensureCorrectNetwork } from '../utils/web3Utils'
 
 // Define window augmentation for TypeScript
 declare global {
@@ -71,166 +72,134 @@ export default function CreateQuest() {
   // Connect Ethereum wallet (MetaMask)
   const connectEthereumWallet = async () => {
     if (!window.ethereum) {
-      throw new Error("No Ethereum wallet detected. Please install MetaMask or another Ethereum wallet.")
+      throw new Error("No Ethereum wallet detected. Please install MetaMask or another Ethereum wallet.");
     }
     
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       if (accounts.length === 0) {
-        throw new Error("No accounts found. Please connect your wallet.")
+        throw new Error("No accounts found. Please connect your wallet.");
       }
-      return accounts[0]
+      return accounts[0];
     } catch (error) {
-      console.error("Error connecting wallet:", error)
-      throw new Error((error as Error).message)
+      console.error("Error connecting wallet:", error);
+      throw new Error((error as Error).message);
     }
-  }
+  };
 
-  // Connect Keplr wallet
+  // Connect Keplr wallet - Updated to handle network switching
   const connectKeplrWallet = async () => {
     if (!window.keplr) {
-      throw new Error("Keplr wallet not detected. Please install the Keplr browser extension.")
+      throw new Error("Keplr wallet not detected. Please install the Keplr browser extension.");
     }
     
     try {
-      const baseChainId = process.env.NEXT_PUBLIC_BASE_CHAIN_ID || "8453"
+      const baseChainId = process.env.NEXT_PUBLIC_BASE_CHAIN_ID || "8453";
       
       // For Base chain (which is EVM), use Keplr's Ethereum provider
       if (baseChainId === "8453") {
         if (!window.keplr.ethereum) {
-          throw new Error("Keplr's Ethereum provider not available. Please update Keplr to the latest version.")
-        }
-        
-        // Add Base chain to Keplr if it's not already added
-        try {
-          // First try to switch to Base chain
-          await window.keplr.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x2105" }], // 0x2105 is hex for 8453
-          })
-        } catch (switchError) {
-          // If chain doesn't exist, add it
-          if ((switchError as any).code === 4902) {
-            try {
-              await window.keplr.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [
-                  {
-                    chainId: "0x2105", // 8453 in hex
-                    chainName: "Base Mainnet",
-                    nativeCurrency: {
-                      name: "Ethereum",
-                      symbol: "ETH",
-                      decimals: 18,
-                    },
-                    rpcUrls: ["https://mainnet.base.org"],
-                    blockExplorerUrls: ["https://basescan.org"]
-                  },
-                ],
-              })
-            } catch (addError) {
-              throw new Error(`Error adding Base chain to Keplr: ${(addError as Error).message}`)
-            }
-          } else {
-            throw switchError
-          }
+          throw new Error("Keplr's Ethereum provider not available. Please update Keplr to the latest version.");
         }
         
         // Request Ethereum accounts
         const accounts = await window.keplr.ethereum.request({
           method: "eth_requestAccounts",
-        })
+        });
         
         if (!accounts || accounts.length === 0) {
-          throw new Error("No Ethereum accounts found in Keplr. Please check your wallet.")
+          throw new Error("No Ethereum accounts found in Keplr. Please check your wallet.");
         }
         
-        return accounts[0]
+        return accounts[0];
       } 
       // For Cosmos chains, use the original Keplr approach
       else {
-        await window.keplr.enable(baseChainId)
-        const offlineSigner = window.keplr.getOfflineSigner(baseChainId)
-        const accounts = await offlineSigner.getAccounts()
+        await window.keplr.enable(baseChainId);
+        const offlineSigner = window.keplr.getOfflineSigner(baseChainId);
+        const accounts = await offlineSigner.getAccounts();
         
         if (accounts.length === 0) {
-          throw new Error("No accounts found in Keplr. Please connect your wallet.")
+          throw new Error("No accounts found in Keplr. Please connect your wallet.");
         }
         
-        return accounts[0].address
+        return accounts[0].address;
       }
     } catch (error) {
-      console.error("Error connecting Keplr wallet:", error)
-      throw new Error((error as Error).message)
+      console.error("Error connecting Keplr wallet:", error);
+      throw new Error((error as Error).message);
     }
-  }
+  };
 
   // Handle wallet connection
   const handleConnectWallet = async (type: 'ethereum' | 'keplr') => {
-    setConnectingWallet(true)
-    setWalletError('')
-    setWalletType(type)
+    setConnectingWallet(true);
+    setWalletError("");
     
     try {
-      let address = ''
+      let address = '';
+      
+      // Connect wallet first
       if (type === 'ethereum') {
-        address = await connectEthereumWallet()
+        address = await connectEthereumWallet();
       } else if (type === 'keplr') {
-        address = await connectKeplrWallet()
+        address = await connectKeplrWallet();
       }
       
-      setWalletAddress(address)
-      setShowConnectWallet(false)
+      // Ensure correct network after wallet connection
+      await ensureCorrectNetwork(type);
+      
+      setWalletAddress(address);
+      setWalletType(type);
+      setShowConnectWallet(false);
       
       // Check if wallet is whitelisted
-      await checkWhitelistStatus(address, type)
+      await checkWhitelistStatus(address, type);
     } catch (error) {
-      console.error(`Error connecting ${type} wallet:`, error)
-      setWalletError((error as Error).message)
+      console.error(`Error connecting ${type} wallet:`, error);
+      setWalletError((error as Error).message);
     } finally {
-      setConnectingWallet(false)
+      setConnectingWallet(false);
     }
-  }
+  };
 
   // Check if wallet is whitelisted
   const checkWhitelistStatus = async (address: string, type: 'ethereum' | 'keplr') => {
     setCheckingWhitelist(true);
     setWhitelistError('');
-    console.log("address: ", address)
-    console.log(address.length)
-    console.log(type)
+    
     try {
-      // For both wallet types in Base chain, we use the same approach since both provide EVM addresses
-      if (!window.ethereum && type === 'ethereum') {
-        throw new Error("Ethereum provider not found");
+      // First ensure we're on the correct network
+      let provider;
+      try {
+        provider = await ensureCorrectNetwork(type);
+      } catch (networkError) {
+        console.error("Network switching error:", networkError);
+        throw new Error(`Please switch to Base Mainnet: ${(networkError as Error).message}`);
       }
       
-      // Connect to the Ethereum contract to check whitelist status
-      const provider = type === 'ethereum' 
-        ? new BrowserProvider(window.ethereum as Eip1193Provider)
-        : new BrowserProvider(window.keplr.ethereum as Eip1193Provider);
-      
+      // Now we know we're on the correct network, create the contract instance
       const contract = new Contract(contractAddress, contractABI, provider);
       
       // Try to call the isWhitelisted function with proper error handling
       let whitelisted = false;
       try {
-        // First, check if the function exists using a different approach
+        // First, check if the function exists
         const code = await provider.getCode(contractAddress);
         if (code === '0x') {
-          throw new Error("Contract not deployed at this address");
+          throw new Error("Contract not deployed at this address. Please verify the contract address.");
         }
-
+        
         whitelisted = await contract.isWhitelisted(address);
       } catch (contractError) {
         console.error("Contract function error:", contractError);
         
-        // Handle specific decoding errors by providing a meaningful message
+        // Handle specific decoding errors
         if ((contractError as Error).message.includes("BAD_DATA") || 
             (contractError as Error).message.includes("could not decode result data")) {
           throw new Error("The contract doesn't support whitelist verification. Please contact the administrator.");
         }
-        throw contractError; // Re-throw other errors
+        throw contractError;
       }
       
       setIsWhitelisted(whitelisted);

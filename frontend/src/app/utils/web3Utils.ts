@@ -152,3 +152,82 @@ export const mintNFT = async (to: string, ipfs: string, latitude: string, longit
     };
   }
 };
+
+// Ensures the wallet is connected to the correct network (Base Mainnet)
+export const ensureCorrectNetwork = async (
+  walletType: 'ethereum' | 'keplr'
+): Promise<ethers.BrowserProvider> => {
+  // Base Mainnet Chain ID
+  const BASE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_BASE_CHAIN_ID);
+  const BASE_HEX_CHAIN_ID = `0x${BASE_CHAIN_ID.toString(16)}`;
+  
+  // Define Base Mainnet details
+  const baseMainnet = {
+    chainId: BASE_HEX_CHAIN_ID,
+    chainName: "Base Mainnet",
+    nativeCurrency: {
+      name: "Ethereum",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: [process.env.NEXT_PUBLIC_RPC_URL],
+    blockExplorerUrls: [process.env.NEXT_PUBLIC_EXPLORER],
+  };
+
+  // Get the appropriate provider based on wallet type
+  let provider: ethers.BrowserProvider;
+  let ethereumProvider: any;
+
+  if (walletType === 'ethereum') {
+    if (!window.ethereum) {
+      throw new Error("Ethereum provider not available. Please install MetaMask.");
+    }
+    ethereumProvider = window.ethereum;
+    provider = new ethers.BrowserProvider(ethereumProvider);
+  } else { // keplr
+    if (!window.keplr || !window.keplr.ethereum) {
+      throw new Error("Keplr Ethereum provider not available. Please install Keplr.");
+    }
+    ethereumProvider = window.keplr.ethereum;
+    provider = new ethers.BrowserProvider(ethereumProvider);
+  }
+
+  try {
+    // Check current network
+    const network = await provider.getNetwork();
+    const currentChainId = Number(network.chainId);
+    
+    console.log(`Current network: ${currentChainId}, Target network: ${BASE_CHAIN_ID}`);
+    
+    // If not on the correct network, try to switch
+    if (currentChainId !== BASE_CHAIN_ID) {
+      console.log("Switching to Base Mainnet...");
+      
+      try {
+        // First try to switch to the network
+        await ethereumProvider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: BASE_HEX_CHAIN_ID }],
+        });
+      } catch (switchError: any) {
+        // If the network isn't added yet, add it
+        if (switchError.code === 4902) {
+          await ethereumProvider.request({
+            method: "wallet_addEthereumChain",
+            params: [baseMainnet],
+          });
+        } else {
+          throw switchError;
+        }
+      }
+      
+      // Refresh provider after network switch
+      provider = new ethers.BrowserProvider(ethereumProvider);
+    }
+    
+    return provider;
+  } catch (error) {
+    console.error("Error ensuring correct network:", error);
+    throw new Error(`Failed to switch to Base Mainnet: ${(error as Error).message}`);
+  }
+};
