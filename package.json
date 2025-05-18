@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "migrate:data": "curl -sSf https://eureka-swea.onrender.com/data/places.json -o ./public/data/places.json"
   },
   "repository": {
     "type": "git",
