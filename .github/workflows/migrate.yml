@@ -1,4 +1,4 @@
-name: lint frontend
+name: migrate data
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  build-macos:
+  migrate-data:
     runs-on: macos-latest
     defaults:
       run:
