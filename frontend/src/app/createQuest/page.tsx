@@ -194,13 +194,15 @@ export default function CreateQuest() {
 
   // Check if wallet is whitelisted
   const checkWhitelistStatus = async (address: string, type: 'ethereum' | 'keplr') => {
-    setCheckingWhitelist(true)
-    setWhitelistError('')
-    
+    setCheckingWhitelist(true);
+    setWhitelistError('');
+    console.log("address: ", address)
+    console.log(address.length)
+    console.log(type)
     try {
       // For both wallet types in Base chain, we use the same approach since both provide EVM addresses
       if (!window.ethereum && type === 'ethereum') {
-        throw new Error("Ethereum provider not found")
+        throw new Error("Ethereum provider not found");
       }
       
       // Connect to the Ethereum contract to check whitelist status
@@ -208,23 +210,42 @@ export default function CreateQuest() {
         ? new BrowserProvider(window.ethereum as Eip1193Provider)
         : new BrowserProvider(window.keplr.ethereum as Eip1193Provider);
       
-      const contract = new Contract(contractAddress, contractABI, provider)
+      const contract = new Contract(contractAddress, contractABI, provider);
       
-      // Call the isWhitelisted function
-      const whitelisted = await contract.isWhitelisted(address)
-      setIsWhitelisted(whitelisted)
+      // Try to call the isWhitelisted function with proper error handling
+      let whitelisted = false;
+      try {
+        // First, check if the function exists using a different approach
+        const code = await provider.getCode(contractAddress);
+        if (code === '0x') {
+          throw new Error("Contract not deployed at this address");
+        }
+
+        whitelisted = await contract.isWhitelisted(address);
+      } catch (contractError) {
+        console.error("Contract function error:", contractError);
+        
+        // Handle specific decoding errors by providing a meaningful message
+        if ((contractError as Error).message.includes("BAD_DATA") || 
+            (contractError as Error).message.includes("could not decode result data")) {
+          throw new Error("The contract doesn't support whitelist verification. Please contact the administrator.");
+        }
+        throw contractError; // Re-throw other errors
+      }
+      
+      setIsWhitelisted(whitelisted);
       
       if (!whitelisted) {
-        setWhitelistError("Your wallet is not whitelisted to create quests. Please contact the administrator.")
+        setWhitelistError("Your wallet is not whitelisted to create quests. Please contact the administrator.");
       }
     } catch (error) {
-      console.error("Error checking whitelist status:", error)
-      setWhitelistError(`Failed to check whitelist status: ${(error as Error).message}`)
-      setIsWhitelisted(false)
+      console.error("Error checking whitelist status:", error);
+      setWhitelistError(`Failed to check whitelist status: ${(error as Error).message}`);
+      setIsWhitelisted(false);
     } finally {
-      setCheckingWhitelist(false)
+      setCheckingWhitelist(false);
     }
-  }
+  };
 
   // Form submission
   const handleSubmit = async () => {
