@@ -75,7 +75,7 @@ Your response MUST be a JSON object that strictly follows this schema:
   ]
 }
 
-Ensure you return EXACTLY 3 places, with all required fields, and valid coordinates.`;
+Ensure you return EXACTLY 3 places, with all required fields, and valid coordinates. Note: You're clue must have some kind of landmark or hint that is easy to decode.`;
       
       const completion = await groq.chat.completions.create({
         model: "llama-3.3-70b-versatile", // Using Llama 3.3 70B model
@@ -86,7 +86,7 @@ Ensure you return EXACTLY 3 places, with all required fields, and valid coordina
           },
           {
             role: "user",
-            content: `Choose 3 nearest places. Based on user's latitude and longitude generate places that are the nearest to the user and also if everything is in same distance then you can pick random places. User's Latitude: ${latitude} Longitude: ${longitude}. Generate clues from this data and give a JSON Response. The expected json data: ${JSON.stringify(placesData)}`
+            content: `Choose 3 nearest places. Note: You're clue must have some kind of landmark or hint that is very fun to decode and mesmerising to users. Based on user's latitude and longitude generate places that are the nearest to the user and also if everything is in same distance then you can pick random places. User's Latitude: ${latitude} Longitude: ${longitude}. Generate clues from this data and give a JSON Response. The expected json data: ${JSON.stringify(placesData)}`
           }
         ],
         response_format: { 
