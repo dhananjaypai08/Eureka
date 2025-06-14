@@ -5,10 +5,6 @@ Eureka is a location-based treasure hunt platform that transforms everyday explo
 [![Deployed on Base](https://img.shields.io/badge/Deployed%20on-Base-0052FF)](https://basescan.org)
 [![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-black)](https://nextjs.org/)
 
-## Live Deployments 
-- [Play Game](https://eureka-swea.onrender.com/)
-- [Mainnet Contract](https://basescan.org/address/0xcB15622d404fc10e49d6f53435814d9Fb27dbD72)
-
 ## 🌟 Features
 
 - **Interactive Treasure Maps**: Beautiful, intuitive interface showing nearby quests
