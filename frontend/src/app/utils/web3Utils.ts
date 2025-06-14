@@ -158,7 +158,7 @@ export const ensureCorrectNetwork = async (
   walletType: 'ethereum' | 'keplr'
 ): Promise<ethers.BrowserProvider> => {
   // Base Mainnet Chain ID
-  const BASE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_BASE_CHAIN_ID);
+  const BASE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_BASE_TESTNET_CHAIN_ID);
   const BASE_HEX_CHAIN_ID = `0x${BASE_CHAIN_ID.toString(16)}`;
   
   // Define Base Mainnet details

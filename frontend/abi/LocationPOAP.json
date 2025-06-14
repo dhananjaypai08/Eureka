@@ -1,5 +1,5 @@
 {
-    "address": "0x8419956c8Bc51e9496e7e0C4D38eed3d9a410cc9",
+    "address": "0x1c0E47aDE1fCA8aBbA050F1DE6d024A35CA903C4",
     "abi": [
 	{
 		"inputs": [
@@ -63,6 +63,13 @@
 		"type": "event"
 	},
 	{
+		"inputs": [],
+		"name": "clearQuests",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "string",
@@ -83,6 +90,16 @@
 				"internalType": "uint256",
 				"name": "_expiry",
 				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "latitude",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "longitude",
+				"type": "string"
 			}
 		],
 		"name": "createQuest",
@@ -363,6 +380,16 @@
 				"internalType": "bool",
 				"name": "isActive",
 				"type": "bool"
+			},
+			{
+				"internalType": "string",
+				"name": "latitude",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "longitude",
+				"type": "string"
 			}
 		],
 		"stateMutability": "view",
@@ -561,6 +588,16 @@
 						"internalType": "bool",
 						"name": "isActive",
 						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "latitude",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "longitude",
+						"type": "string"
 					}
 				],
 				"internalType": "struct LocationPOAP.Quest[]",
