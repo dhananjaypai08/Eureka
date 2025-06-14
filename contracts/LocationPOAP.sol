@@ -1,12 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 import "@openzeppelin/contracts@4.7.0/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts@4.7.0/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts@4.7.0/access/Ownable.sol";
 import "@openzeppelin/contracts@4.7.0/utils/Counters.sol"; 
 
-contract LocationPOAP is ERC721, ERC721URIStorage, Ownable {
+contract LocationPOAP is ERC721, ERC721URIStorage, Ownable, AutomationCompatibleInterface{
+    struct Quest {
+        uint256 id;
+        string title;
+        address creator;
+        string clue;
+        uint256 reward;
+        uint256 expiresAt;
+        bool isActive;
+    }
+    uint256 public immutable interval;
+    uint256 public lastTimeStamp;
+    Quest[] public all_quests;
+
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
@@ -33,8 +47,50 @@ contract LocationPOAP is ERC721, ERC721URIStorage, Ownable {
     event POAPMinted(address indexed user, uint256 tokenId);
     event UserWhitelisted(address indexed user);
 
-    constructor() ERC721("LPOAP", "LPOAP") {
+    constructor(uint256 updateInterval) ERC721("LPOAP", "LPOAP") {
         whitelist(msg.sender);
+        interval = updateInterval;
+        lastTimeStamp = block.timestamp;
+    }
+
+    function checkUpkeep(
+        bytes calldata /* checkData */
+    )
+        external
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory /* performData */)
+    {
+        upkeepNeeded = false;
+
+        for (uint i = 0; i < all_quests.length; i++) {
+            if (all_quests[i].isActive && all_quests[i].expiresAt < block.timestamp) {
+                upkeepNeeded = true;
+                break;
+            }
+        }
+    }
+
+
+    function performUpkeep(bytes calldata /* performData */) external override {
+        if ((block.timestamp - lastTimeStamp) > interval) {
+            lastTimeStamp = block.timestamp;
+
+            for (uint i = 0; i < all_quests.length; i++) {
+                if (all_quests[i].isActive && all_quests[i].expiresAt < block.timestamp) {
+                    all_quests[i].isActive = false;
+                }
+            }
+        }
+    }
+
+    function getAllQuests() public view returns (Quest[] memory) {
+        return all_quests;
+    }
+
+    function createQuest(string memory clue, uint256 reward, string memory title, uint256 _expiry) public {
+        Quest memory new_quest = Quest(all_quests.length, title, msg.sender, clue, reward, _expiry, true);
+        all_quests.push(new_quest);
     }
 
     function whitelist(address user) public onlyOwner {
