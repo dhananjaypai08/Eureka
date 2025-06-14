@@ -13,9 +13,11 @@ contract LocationPOAP is ERC721, ERC721URIStorage, Ownable, AutomationCompatible
         string title;
         address creator;
         string clue;
-        uint256 reward;
         uint256 expiresAt;
         bool isActive;
+        string latitude;
+        string longitude;
+        address winner;
     }
     uint256 public immutable interval;
     uint256 public lastTimeStamp;
@@ -88,9 +90,18 @@ contract LocationPOAP is ERC721, ERC721URIStorage, Ownable, AutomationCompatible
         return all_quests;
     }
 
-    function createQuest(string memory clue, uint256 reward, string memory title, uint256 _expiry) public {
-        Quest memory new_quest = Quest(all_quests.length, title, msg.sender, clue, reward, _expiry, true);
+    function createQuest(string memory clue, string memory title, uint256 _expiry, string memory latitude, string memory longitude) public {
+        Quest memory new_quest = Quest(all_quests.length, title, msg.sender, clue, block.timestamp + _expiry, true, latitude, longitude, msg.sender);
         all_quests.push(new_quest);
+    }
+
+    function changeWinner(uint256 quest_id, address winner) public view {
+        Quest memory old_quest = all_quests[quest_id];
+        old_quest.winner = winner;
+    }
+
+    function clearQuests() public {
+       delete all_quests;
     }
 
     function whitelist(address user) public onlyOwner {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Map, Info, Footprints, Plus } from "lucide-react";
+import { Map, Info, Footprints, Plus, TimerIcon } from "lucide-react";
 import Image from "next/image";
 
 export default function Navbar() {
@@ -91,6 +91,21 @@ export default function Navbar() {
               My Footprints
               <span className={`absolute bottom-0 left-0 h-0.5 bg-[#D4BE94] transition-all duration-300 ${
                 isActive('/footprints') ? "w-full" : "w-0 group-hover:w-full"
+              }`}></span>
+            </Link>
+
+            <Link
+              href="/time-quests"
+              className={`px-1 py-2 text-sm font-medium relative group flex items-center ${
+                isActive('/createQuest') 
+                  ? "text-[#D4BE94] font-bold" 
+                  : "text-[#D4BE94] hover:text-[#F5E6C8] transition-colors"
+              }`}
+            >
+              <TimerIcon className="h-4 w-4 mr-1.5" />
+              Time based Quests
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-[#D4BE94] transition-all duration-300 ${
+                isActive('/createQuest') ? "w-full" : "w-0 group-hover:w-full"
               }`}></span>
             </Link>
             

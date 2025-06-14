@@ -231,3 +231,152 @@ export const ensureCorrectNetwork = async (
     throw new Error(`Failed to switch to Base Mainnet: ${(error as Error).message}`);
   }
 };
+
+
+// Get all quests from the contract
+export const getAllQuests = async (): Promise<{success: boolean, quests?: any[], error?: string}> => {
+  try {
+    const contractAddress = contractData.address;
+    const abi = contractData.abi;
+    
+    // Create provider
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+    
+    // Create contract instance
+    const contract = new ethers.Contract(contractAddress, abi, provider);
+    
+    // Call getAllQuests function
+    const quests = await contract.getAllQuests();
+    
+    // Convert BigNumber values to regular numbers/strings
+    const formattedQuests = quests.map((quest: any) => ({
+      id: Number(quest.id.toString()),
+      title: quest.title,
+      creator: quest.creator,
+      clue: quest.clue,
+      expiresAt: Number(quest.expiresAt.toString()),
+      isActive: quest.isActive,
+      latitude: quest.latitude,
+      longitude: quest.longitude,
+      winner: quest.winner
+    }));
+    
+    return {
+      success: true,
+      quests: formattedQuests
+    };
+  } catch (error) {
+    console.error("Error getting quests:", error);
+    return {
+      success: false,
+      error: (error as Error).message
+    };
+  }
+};
+
+// Create a new quest
+export const createQuest = async (
+  clue: string,
+  title: string,
+  expiryInSeconds: number,
+  latitude: string,
+  longitude: string
+): Promise<{success: boolean, txHash: string, error?: string}> => {
+  try {
+    const contractAddress = contractData.address;
+    const abi = contractData.abi;
+    
+    // Create provider
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+    
+    // Create wallet with private key
+    const wallet = new ethers.Wallet(process.env.NEXT_PUBLIC_MINT_PRIVATE_KEY || "", provider);
+    
+    // Create contract instance
+    const contract = new ethers.Contract(contractAddress, abi, wallet);
+    
+    // Call createQuest function
+    const tx = await contract.createQuest(clue, title, expiryInSeconds, latitude, longitude);
+    
+    // Wait for transaction to be mined
+    await tx.wait();
+    
+    return {
+      success: true,
+      txHash: tx.hash
+    };
+  } catch (error) {
+    console.error("Error creating quest:", error);
+    return {
+      success: false,
+      txHash: "",
+      error: (error as Error).message
+    };
+  }
+};
+
+// Update quest winner
+export const changeWinner = async (
+  questId: number,
+  winnerAddress: string
+): Promise<{success: boolean, txHash: string, error?: string}> => {
+  try {
+    const contractAddress = contractData.address;
+    const abi = contractData.abi;
+    
+    // Create provider
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+    
+    // Create wallet with private key
+    const wallet = new ethers.Wallet(process.env.NEXT_PUBLIC_MINT_PRIVATE_KEY || "", provider);
+    
+    // Create contract instance
+    const contract = new ethers.Contract(contractAddress, abi, wallet);
+    
+    // Call changeWinner function
+    const tx = await contract.changeWinner(questId, winnerAddress);
+    
+    // Wait for transaction to be mined
+    await tx.wait();
+    
+    return {
+      success: true,
+      txHash: tx.hash
+    };
+  } catch (error) {
+    console.error("Error changing winner:", error);
+    return {
+      success: false,
+      txHash: "",
+      error: (error as Error).message
+    };
+  }
+};
+
+// Check if user is whitelisted
+export const checkWhitelist = async (userAddress: string): Promise<{success: boolean, isWhitelisted?: boolean, error?: string}> => {
+  try {
+    const contractAddress = contractData.address;
+    const abi = contractData.abi;
+    
+    // Create provider
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+    
+    // Create contract instance
+    const contract = new ethers.Contract(contractAddress, abi, provider);
+    
+    // Call isWhitelisted function
+    const isWhitelisted = await contract.isWhitelisted(userAddress);
+    
+    return {
+      success: true,
+      isWhitelisted: isWhitelisted
+    };
+  } catch (error) {
+    console.error("Error checking whitelist:", error);
+    return {
+      success: false,
+      error: (error as Error).message
+    };
+  }
+};
